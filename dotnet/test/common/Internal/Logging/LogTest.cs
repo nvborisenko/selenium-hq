@@ -9,11 +9,25 @@ namespace OpenQA.Selenium.Internal.Logging
         private TestLogHandler testLogHandler;
         private ILogger logger;
 
+        private void ResetGlobalLog()
+        {
+            Log.SetLevel(LogEventLevel.Info);
+            Log.Handlers.Clear().Handlers.Add(new ConsoleLogHandler());
+        }
+
         [SetUp]
         public void SetUp()
         {
+            ResetGlobalLog();
+
             testLogHandler = new TestLogHandler();
             logger = Log.GetLogger<LogTest>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            ResetGlobalLog();
         }
 
         [Test]
@@ -139,6 +153,16 @@ namespace OpenQA.Selenium.Internal.Logging
             var logger = context.GetLogger<LogTest>();
 
             Assert.That(logger.Level, Is.EqualTo(LogEventLevel.Warn));
+        }
+
+        [Test]
+        public void ContextShouldEmitMessages()
+        {
+            using var context = Log.CreateContext(LogEventLevel.Trace).Handlers.Add(testLogHandler);
+
+            logger.Trace("test message");
+
+            Assert.That(testLogHandler.Events.Count, Is.EqualTo(1));
         }
 
         [Test]
