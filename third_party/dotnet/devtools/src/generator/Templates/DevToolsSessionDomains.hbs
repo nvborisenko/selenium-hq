@@ -49,6 +49,7 @@ namespace {{rootNamespace}}
         }
     }
 
+    [global::System.Text.Json.Serialization.JsonSerializable(typeof(OpenQA.Selenium.DevTools.DevToolsCommandData))]
 {{#each commands}}
     [global::System.Text.Json.Serialization.JsonSerializable(typeof({{FullTypeName}}), TypeInfoPropertyName = "{{FullSnakeTypeName}}")]
     [global::System.Text.Json.Serialization.JsonSerializable(typeof({{FullResponseTypeName}}), TypeInfoPropertyName = "{{FullSnakeResponseTypeName}}")]

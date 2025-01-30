@@ -26,7 +26,7 @@ using System.Text.Json.Serialization;
 
 namespace OpenQA.Selenium.DevTools.Json;
 
-internal sealed class StringConverter : JsonConverter<string>
+internal sealed class StringConverter : JsonConverter<string?>
 {
     public override bool HandleNull => true;
 
@@ -56,6 +56,11 @@ internal sealed class StringConverter : JsonConverter<string>
         }
     }
 
-    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) =>
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options) =>
         writer.WriteStringValue(value);
+
+    public override string? ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return reader.GetString();
+    }
 }

@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -156,7 +157,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -189,7 +190,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, sessionId, JsonSerializer.SerializeToNode(command), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, sessionId, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -201,7 +202,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new InvalidOperationException($"Type {typeof(TCommand)} does not correspond to a known command response type.");
             }
 
-            return result.Value.Deserialize(commandResponseType) as ICommandResponse<TCommand>;
+            return result.Value.Deserialize(commandResponseType, domains.JsonSerializerContext.Options) as ICommandResponse<TCommand>;
         }
 
         /// <summary>
@@ -223,14 +224,14 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
                 return default(TCommandResponse);
             }
 
-            return result.Value.Deserialize<TCommandResponse>();
+            return result.Value.Deserialize<TCommandResponse>(domains.JsonSerializerContext.Options);
         }
 
         /// <summary>
@@ -283,7 +284,7 @@ namespace OpenQA.Selenium.DevTools
 
                 LogTrace("Sending {0} {1}: {2}", message.CommandId, message.CommandName, commandParameters.ToString());
 
-                string contents = JsonSerializer.Serialize(message);
+                string contents = JsonSerializer.Serialize(message, typeof(DevToolsCommandData), domains.JsonSerializerContext);
                 this.pendingCommands.TryAdd(message.CommandId, message);
                 await this.connection.SendData(contents).ConfigureAwait(false);
 
@@ -410,7 +411,7 @@ namespace OpenQA.Selenium.DevTools
                     rawVersionInfo = await client.GetStringAsync("/json/version").ConfigureAwait(false);
                 }
 
-                var versionInfo = JsonSerializer.Deserialize<DevToolsVersionInfo>(rawVersionInfo);
+                var versionInfo = JsonSerializer.Deserialize(rawVersionInfo, DevToolsJsonSerializerContext.Default.DevToolsVersionInfo);
                 this.websocketAddress = versionInfo.WebSocketDebuggerUrl;
 
                 if (requestedProtocolVersion == AutoDetectDevToolsProtocolVersion)
@@ -649,6 +650,8 @@ namespace OpenQA.Selenium.DevTools
 
         private void LogTrace(string message, params object[] args)
         {
+            logger.Trace(string.Format(message, args));
+
             if (LogMessage != null)
             {
                 LogMessage(this, new DevToolsSessionLogMessageEventArgs(DevToolsSessionLogLevel.Trace, message, args));
@@ -663,4 +666,7 @@ namespace OpenQA.Selenium.DevTools
             }
         }
     }
+
+    [JsonSerializable(typeof(DevToolsVersionInfo))]
+    internal partial class DevToolsJsonSerializerContext : JsonSerializerContext;
 }

@@ -17,6 +17,8 @@
 // under the License.
 // </copyright>
 
+using System.Text.Json.Serialization;
+
 namespace OpenQA.Selenium.DevTools.V130
 {
     /// <summary>
@@ -64,5 +66,8 @@ namespace OpenQA.Selenium.DevTools.V130
         /// Gets the object used for manipulating the browser's logs.
         /// </summary>
         public override DevTools.Log Log => new V130Log(domains.Log);
+
+
+        internal override JsonSerializerContext JsonSerializerContext => V130JsonSerializerContext.Default;
     }
 }

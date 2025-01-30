@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace OpenQA.Selenium.DevTools
 {
@@ -35,12 +36,12 @@ namespace OpenQA.Selenium.DevTools
         // This is the list of known supported DevTools version implementation.
         // When new versions are implemented for support, new types must be
         // added to this dictionary.
-        private static readonly Dictionary<int, Type> SupportedDevToolsVersions = new Dictionary<int, Type>()
+        private static readonly Dictionary<int, Func<DevToolsSession, DevToolsDomains>> SupportedDevToolsVersions = new Dictionary<int, Func<DevToolsSession, DevToolsDomains>>()
         {
-            { 130, typeof(V130.V130Domains) },
-            { 132, typeof(V132.V132Domains) },
-            { 131, typeof(V131.V131Domains) },
-            { 85, typeof(V85.V85Domains) }
+            { 130, (s) => new V130.V130Domains(s) },
+            { 132, (s) => new V132.V132Domains(s) },
+            { 131, (s) => new V131.V131Domains(s) },
+            { 85, (s) => new V85.V85Domains(s) }
         };
 
         /// <summary>
@@ -93,18 +94,16 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentException("Version range must be positive", nameof(versionRange));
             }
 
-            DevToolsDomains domains = null;
-            Type domainType = MatchDomainsVersion(protocolVersion, versionRange);
-            ConstructorInfo constructor = domainType.GetConstructor(new Type[] { typeof(DevToolsSession) });
-            if (constructor != null)
-            {
-                domains = constructor.Invoke(new object[] { session }) as DevToolsDomains;
-            }
+            var func = MatchDomainsVersion(protocolVersion, versionRange);
+
+            DevToolsDomains domains = func(session);
 
             return domains;
         }
 
-        private static Type MatchDomainsVersion(int desiredVersion, int versionRange)
+        internal abstract JsonSerializerContext JsonSerializerContext { get; }
+
+        private static Func<DevToolsSession, DevToolsDomains> MatchDomainsVersion(int desiredVersion, int versionRange)
         {
             // Return fast on an exact match
             if (SupportedDevToolsVersions.ContainsKey(desiredVersion))
