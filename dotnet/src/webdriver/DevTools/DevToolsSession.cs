@@ -157,7 +157,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, typeof(TCommand), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -166,7 +166,7 @@ namespace OpenQA.Selenium.DevTools
 
             if (!this.domains.VersionSpecificDomains.ResponseTypeMap.TryGetCommandResponseType<TCommand>(out Type commandResponseType))
             {
-                throw new InvalidOperationException($"Type {command.GetType()} does not correspond to a known command response type.");
+                throw new InvalidOperationException($"Type {typeof(TCommand)} does not correspond to a known command response type.");
             }
 
             return result.Value.Deserialize(commandResponseType) as ICommandResponse<TCommand>;
@@ -190,7 +190,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, sessionId, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, sessionId, JsonSerializer.SerializeToNode(command, typeof(TCommand), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -224,7 +224,7 @@ namespace OpenQA.Selenium.DevTools
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, command.GetType(), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+            var result = await SendCommand(command.CommandName, JsonSerializer.SerializeToNode(command, typeof(TCommand), domains.JsonSerializerContext), cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
             if (result == null)
             {
