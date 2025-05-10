@@ -52,11 +52,11 @@ public class V135Target : DevTools.Target
     /// contains the list of <see cref="TargetInfo"/> objects describing the
     /// targets available for this session.
     /// </returns>
-    public override async Task<ReadOnlyCollection<TargetInfo>> GetTargets(object? settings = null)
+    public override async Task<ReadOnlyCollection<TargetInfo>> GetTargetsAsync(object? settings = null)
     {
         settings ??= new GetTargetsCommandSettings();
 
-        var response = await adapter.GetTargets((GetTargetsCommandSettings)settings).ConfigureAwait(false);
+        var response = await adapter.GetTargetsAsync((GetTargetsCommandSettings)settings).ConfigureAwait(false);
 
         List<TargetInfo> targets = new List<TargetInfo>(response.TargetInfos.Length);
         for (int i = 0; i < response.TargetInfos.Length; i++)
@@ -86,9 +86,9 @@ public class V135Target : DevTools.Target
     /// A task representing the asynchronous attach operation. The task result contains the
     /// session ID established for commands to the target attached to.
     /// </returns>
-    public override async Task<string> AttachToTarget(string targetId)
+    public override async Task<string> AttachToTargetAsync(string targetId)
     {
-        var result = await adapter.AttachToTarget(new AttachToTargetCommandSettings() { TargetId = targetId, Flatten = true }).ConfigureAwait(false);
+        var result = await adapter.AttachToTargetAsync(new AttachToTargetCommandSettings() { TargetId = targetId, Flatten = true }).ConfigureAwait(false);
         return result.SessionId;
     }
 
@@ -98,9 +98,9 @@ public class V135Target : DevTools.Target
     /// <param name="sessionId">The ID of the session of the target from which to detach.</param>
     /// <param name="targetId">The ID of the target from which to detach.</param>
     /// <returns>A task representing the asynchronous detach operation.</returns>
-    public override async Task DetachFromTarget(string? sessionId = null, string? targetId = null)
+    public override async Task DetachFromTargetAsync(string? sessionId = null, string? targetId = null)
     {
-        await adapter.DetachFromTarget(new DetachFromTargetCommandSettings()
+        await adapter.DetachFromTargetAsync(new DetachFromTargetCommandSettings()
         {
             SessionId = sessionId,
             TargetId = targetId
@@ -111,9 +111,9 @@ public class V135Target : DevTools.Target
     /// Asynchronously sets the DevTools Protocol connection to automatically attach to new targets.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task SetAutoAttach()
+    public override async Task SetAutoAttachAsync()
     {
-        await adapter.SetAutoAttach(new SetAutoAttachCommandSettings() { AutoAttach = true, WaitForDebuggerOnStart = false, Flatten = true }).ConfigureAwait(false);
+        await adapter.SetAutoAttachAsync(new SetAutoAttachCommandSettings() { AutoAttach = true, WaitForDebuggerOnStart = false, Flatten = true }).ConfigureAwait(false);
     }
 
     private void OnDetachedFromTarget(object? sender, DetachedFromTargetEventArgs e)

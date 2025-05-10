@@ -35,7 +35,7 @@ public class DevToolsTabsTest : DevToolsTestFixture
     public async Task ClosingTabDoesNotBreakDevToolsSession()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Console.Enable();
+        await domains.Console.EnableAsync();
         var oldWindowHandle = driver.CurrentWindowHandle;
         driver.SwitchTo().NewWindow(WindowType.Tab);
         driver.SwitchTo().Window(oldWindowHandle);
@@ -43,7 +43,7 @@ public class DevToolsTabsTest : DevToolsTestFixture
         Assert.That(
             async () =>
             {
-                await domains.Console.Enable();
+                await domains.Console.EnableAsync();
             },
             Throws.Nothing
         );

@@ -52,45 +52,45 @@ public class V135Network : DevTools.Network
     /// Asynchronously disables network caching.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task DisableNetworkCaching()
+    public override async Task DisableNetworkCachingAsync()
     {
-        await network.SetCacheDisabled(new SetCacheDisabledCommandSettings() { CacheDisabled = true }).ConfigureAwait(false);
+        await network.SetCacheDisabledAsync(new SetCacheDisabledCommandSettings() { CacheDisabled = true }).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously enables network caching.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task EnableNetworkCaching()
+    public override async Task EnableNetworkCachingAsync()
     {
-        await network.SetCacheDisabled(new SetCacheDisabledCommandSettings() { CacheDisabled = false }).ConfigureAwait(false);
+        await network.SetCacheDisabledAsync(new SetCacheDisabledCommandSettings() { CacheDisabled = false }).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously enables the Network domain..
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task EnableNetwork()
+    public override async Task EnableNetworkAsync()
     {
-        await network.Enable(new Network.EnableCommandSettings()).ConfigureAwait(false);
+        await network.EnableAsync(new Network.EnableCommandSettings()).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously disables the Network domain..
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task DisableNetwork()
+    public override async Task DisableNetworkAsync()
     {
-        await network.Disable().ConfigureAwait(false);
+        await network.DisableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously enables the fetch domain for all URL patterns.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task EnableFetchForAllPatterns()
+    public override async Task EnableFetchForAllPatternsAsync()
     {
-        await fetch.Enable(new Fetch.EnableCommandSettings()
+        await fetch.EnableAsync(new Fetch.EnableCommandSettings()
         {
             Patterns = new Fetch.RequestPattern[]
             {
@@ -105,9 +105,9 @@ public class V135Network : DevTools.Network
     /// Asynchronously disables the fetch domain.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task DisableFetch()
+    public override async Task DisableFetchAsync()
     {
-        await fetch.Disable().ConfigureAwait(false);
+        await fetch.DisableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -116,14 +116,14 @@ public class V135Network : DevTools.Network
     /// <param name="userAgent">A <see cref="UserAgent"/> object containing the user agent values to override.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="userAgent"/> is null.</exception>
-    public override async Task SetUserAgentOverride(UserAgent userAgent)
+    public override async Task SetUserAgentOverrideAsync(UserAgent userAgent)
     {
         if (userAgent is null)
         {
             throw new ArgumentNullException(nameof(userAgent));
         }
 
-        await network.SetUserAgentOverride(new SetUserAgentOverrideCommandSettings()
+        await network.SetUserAgentOverrideAsync(new SetUserAgentOverrideCommandSettings()
         {
             UserAgent = userAgent.UserAgentString,
             AcceptLanguage = userAgent.AcceptLanguage,
@@ -137,7 +137,7 @@ public class V135Network : DevTools.Network
     /// <param name="requestData">The <see cref="HttpRequestData"/> of the request.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> is <see langword="null"/>.</exception>
-    public override async Task ContinueRequest(HttpRequestData requestData)
+    public override async Task ContinueRequestAsync(HttpRequestData requestData)
     {
         if (requestData is null)
         {
@@ -167,7 +167,7 @@ public class V135Network : DevTools.Network
             commandSettings.PostData = Convert.ToBase64String(Encoding.UTF8.GetBytes(requestData.PostData));
         }
 
-        await fetch.ContinueRequest(commandSettings).ConfigureAwait(false);
+        await fetch.ContinueRequestAsync(commandSettings).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class V135Network : DevTools.Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> with which to respond to the request</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> or <paramref name="responseData"/> are <see langword="null"/>.</exception>
-    public override async Task ContinueRequestWithResponse(HttpRequestData requestData, HttpResponseData responseData)
+    public override async Task ContinueRequestWithResponseAsync(HttpRequestData requestData, HttpResponseData responseData)
     {
         if (requestData is null)
         {
@@ -216,7 +216,7 @@ public class V135Network : DevTools.Network
             commandSettings.Body = Convert.ToBase64String(Encoding.UTF8.GetBytes(responseData.Body));
         }
 
-        await fetch.FulfillRequest(commandSettings).ConfigureAwait(false);
+        await fetch.FulfillRequestAsync(commandSettings).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -225,14 +225,14 @@ public class V135Network : DevTools.Network
     /// <param name="requestData">The <see cref="HttpRequestData"/> of the network call.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> is <see langword="null"/>.</exception>
-    public override async Task ContinueRequestWithoutModification(HttpRequestData requestData)
+    public override async Task ContinueRequestWithoutModificationAsync(HttpRequestData requestData)
     {
         if (requestData is null)
         {
             throw new ArgumentNullException(nameof(requestData));
         }
 
-        await fetch.ContinueRequest(new ContinueRequestCommandSettings() { RequestId = requestData.RequestId }).ConfigureAwait(false);
+        await fetch.ContinueRequestAsync(new ContinueRequestCommandSettings() { RequestId = requestData.RequestId }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -242,9 +242,9 @@ public class V135Network : DevTools.Network
     /// <param name="userName">The user name with which to authenticate.</param>
     /// <param name="password">The password with which to authenticate.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task ContinueWithAuth(string requestId, string? userName, string? password)
+    public override async Task ContinueWithAuthAsync(string requestId, string? userName, string? password)
     {
-        await fetch.ContinueWithAuth(new ContinueWithAuthCommandSettings()
+        await fetch.ContinueWithAuthAsync(new ContinueWithAuthCommandSettings()
         {
             RequestId = requestId,
             AuthChallengeResponse = new V135.Fetch.AuthChallengeResponse()
@@ -261,9 +261,9 @@ public class V135Network : DevTools.Network
     /// </summary>
     /// <param name="requestId">The ID of the network request for which to cancel authentication.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task CancelAuth(string requestId)
+    public override async Task CancelAuthAsync(string requestId)
     {
-        await fetch.ContinueWithAuth(new ContinueWithAuthCommandSettings()
+        await fetch.ContinueWithAuthAsync(new ContinueWithAuthCommandSettings()
         {
             RequestId = requestId,
             AuthChallengeResponse = new OpenQA.Selenium.DevTools.V135.Fetch.AuthChallengeResponse()
@@ -279,7 +279,7 @@ public class V135Network : DevTools.Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> object to which to add the response body.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="responseData"/> is <see langword="null"/>.</exception>
-    public override async Task AddResponseBody(HttpResponseData responseData)
+    public override async Task AddResponseBodyAsync(HttpResponseData responseData)
     {
         if (responseData is null)
         {
@@ -289,7 +289,7 @@ public class V135Network : DevTools.Network
         // If the response is a redirect, retrieving the body will throw an error in CDP.
         if (responseData.StatusCode < 300 || responseData.StatusCode > 399)
         {
-            var bodyResponse = await fetch.GetResponseBody(new Fetch.GetResponseBodyCommandSettings() { RequestId = responseData.RequestId }).ConfigureAwait(false);
+            var bodyResponse = await fetch.GetResponseBodyAsync(new Fetch.GetResponseBodyCommandSettings() { RequestId = responseData.RequestId }).ConfigureAwait(false);
             if (bodyResponse != null)
             {
                 if (bodyResponse.Base64Encoded)
@@ -310,14 +310,14 @@ public class V135Network : DevTools.Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> of the network response.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="responseData"/> is <see langword="null"/>.</exception>
-    public override async Task ContinueResponseWithoutModification(HttpResponseData responseData)
+    public override async Task ContinueResponseWithoutModificationAsync(HttpResponseData responseData)
     {
         if (responseData is null)
         {
             throw new ArgumentNullException(nameof(responseData));
         }
 
-        await fetch.ContinueResponse(new ContinueResponseCommandSettings() { RequestId = responseData.RequestId }).ConfigureAwait(false);
+        await fetch.ContinueResponseAsync(new ContinueResponseCommandSettings() { RequestId = responseData.RequestId }).ConfigureAwait(false);
     }
 
     private void OnFetchAuthRequired(object? sender, Fetch.AuthRequiredEventArgs e)

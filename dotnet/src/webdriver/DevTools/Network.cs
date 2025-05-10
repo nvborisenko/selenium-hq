@@ -47,40 +47,40 @@ public abstract class Network
     /// Asynchronously disables network caching.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task DisableNetworkCaching();
+    public abstract Task DisableNetworkCachingAsync();
 
     /// <summary>
     /// Asynchronously enables network caching.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task EnableNetworkCaching();
+    public abstract Task EnableNetworkCachingAsync();
 
     /// <summary>
     /// Asynchronously enables the network domain.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task EnableNetwork();
+    public abstract Task EnableNetworkAsync();
 
     /// <summary>
     /// Asynchronously disables the fetch domain.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task DisableNetwork();
+    public abstract Task DisableNetworkAsync();
 
     /// <summary>
     /// Asynchronously enables the fetch domain for all URL patterns.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task EnableFetchForAllPatterns();
+    public abstract Task EnableFetchForAllPatternsAsync();
 
     /// <summary>
     /// Asynchronously sets the override of the user agent string.
     /// </summary>
     /// <param name="userAgent">The user agent string to set.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task SetUserAgentOverride(string userAgent)
+    public async Task SetUserAgentOverrideAsync(string userAgent)
     {
-        await SetUserAgentOverride(new UserAgent(userAgent)).ConfigureAwait(false);
+        await SetUserAgentOverrideAsync(new UserAgent(userAgent)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -89,13 +89,13 @@ public abstract class Network
     /// <param name="userAgent">A <see cref="UserAgent"/> object containing the user agent values to override.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="userAgent"/> is null.</exception>
-    public abstract Task SetUserAgentOverride(UserAgent userAgent);
+    public abstract Task SetUserAgentOverrideAsync(UserAgent userAgent);
 
     /// <summary>
     /// Asynchronously disables the fetch domain.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task DisableFetch();
+    public abstract Task DisableFetchAsync();
 
     /// <summary>
     /// Asynchronously continues an intercepted network request.
@@ -103,7 +103,7 @@ public abstract class Network
     /// <param name="requestData">The <see cref="HttpRequestData"/> of the request.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> is <see langword="null"/>.</exception>
-    public abstract Task ContinueRequest(HttpRequestData requestData);
+    public abstract Task ContinueRequestAsync(HttpRequestData requestData);
 
     /// <summary>
     /// Asynchronously continues an intercepted network request and returns the specified response.
@@ -112,7 +112,7 @@ public abstract class Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> with which to respond to the request</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> or <paramref name="responseData"/> are <see langword="null"/>.</exception>
-    public abstract Task ContinueRequestWithResponse(HttpRequestData requestData, HttpResponseData responseData);
+    public abstract Task ContinueRequestWithResponseAsync(HttpRequestData requestData, HttpResponseData responseData);
 
     /// <summary>
     /// Asynchronously continues an intercepted network request without modification.
@@ -120,7 +120,7 @@ public abstract class Network
     /// <param name="requestData">The <see cref="HttpRequestData"/> of the network request.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="requestData"/> is <see langword="null"/>.</exception>
-    public abstract Task ContinueRequestWithoutModification(HttpRequestData requestData);
+    public abstract Task ContinueRequestWithoutModificationAsync(HttpRequestData requestData);
 
     /// <summary>
     /// Asynchronously continues an intercepted network call using authentication.
@@ -129,14 +129,14 @@ public abstract class Network
     /// <param name="userName">The user name with which to authenticate.</param>
     /// <param name="password">The password with which to authenticate.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task ContinueWithAuth(string requestId, string? userName, string? password);
+    public abstract Task ContinueWithAuthAsync(string requestId, string? userName, string? password);
 
     /// <summary>
     /// Asynchronously cancels authorization of an intercepted network request.
     /// </summary>
     /// <param name="requestId">The ID of the network request for which to cancel authentication.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task CancelAuth(string requestId);
+    public abstract Task CancelAuthAsync(string requestId);
 
     /// <summary>
     /// Asynchronously adds the response body to the provided <see cref="HttpResponseData"/> object.
@@ -144,7 +144,7 @@ public abstract class Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> object to which to add the response body.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="responseData"/> is <see langword="null"/>.</exception>
-    public abstract Task AddResponseBody(HttpResponseData responseData);
+    public abstract Task AddResponseBodyAsync(HttpResponseData responseData);
 
     /// <summary>
     /// Asynchronously continues an intercepted network response without modification.
@@ -152,7 +152,7 @@ public abstract class Network
     /// <param name="responseData">The <see cref="HttpResponseData"/> of the network response.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="responseData"/> is <see langword="null"/>.</exception>
-    public abstract Task ContinueResponseWithoutModification(HttpResponseData responseData);
+    public abstract Task ContinueResponseWithoutModificationAsync(HttpResponseData responseData);
 
     /// <summary>
     /// Raises the AuthRequired event.

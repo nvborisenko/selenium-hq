@@ -484,7 +484,7 @@ public class ExecutingJavascriptTest : DriverTestFixture
 
         driver.Url = xhtmlTestPage;
 
-        PinnedScript script = await jsEngine.PinScript("return document.title;");
+        PinnedScript script = await jsEngine.PinScriptAsync("return document.title;");
         for (int i = 0; i < 5; i++)
         {
             object result = ((IJavaScriptExecutor)driver).ExecuteScript(script);
@@ -493,7 +493,7 @@ public class ExecutingJavascriptTest : DriverTestFixture
             Assert.That(result, Is.EqualTo("XHTML Test Page"));
         }
 
-        await jsEngine.UnpinScript(script);
+        await jsEngine.UnpinScriptAsync(script);
 
         Assert.That(
             () => ((IJavaScriptExecutor)driver).ExecuteScript(script),
@@ -512,43 +512,43 @@ public class ExecutingJavascriptTest : DriverTestFixture
 
         using IJavaScriptEngine jsEngine = new JavaScriptEngine(driver);
 
-        var initScript = await jsEngine.AddInitializationScript(ScriptName, ScriptValue);
+        var initScript = await jsEngine.AddInitializationScriptAsync(ScriptName, ScriptValue);
 
         Assert.That(initScript, Is.Not.Null);
         Assert.That(initScript.ScriptSource, Is.EqualTo(ScriptValue));
         Assert.That(initScript.ScriptName, Is.EqualTo(ScriptName));
         Assert.That(initScript.ScriptId, Is.Not.Null);
 
-        await jsEngine.StartEventMonitoring();
+        await jsEngine.StartEventMonitoringAsync();
 
         driver.Navigate().Refresh();
         driver.SwitchTo().Alert().Accept();
 
         Assert.That(jsEngine.InitializationScripts, Does.Contain(initScript));
-        await jsEngine.RemoveInitializationScript(ScriptName);
+        await jsEngine.RemoveInitializationScriptAsync(ScriptName);
 
         driver.Navigate().Refresh();
         Assert.That(() => driver.SwitchTo().Alert().Accept(), Throws.TypeOf<NoAlertPresentException>());
 
         Assert.That(jsEngine.InitializationScripts, Does.Not.Contain(initScript));
 
-        await jsEngine.AddInitializationScript(ScriptName, ScriptValue);
+        await jsEngine.AddInitializationScriptAsync(ScriptName, ScriptValue);
 
         driver.Navigate().Refresh();
         driver.SwitchTo().Alert().Accept();
         Assert.That(jsEngine.InitializationScripts, Does.Contain(initScript));
 
-        await jsEngine.ClearInitializationScripts();
+        await jsEngine.ClearInitializationScriptsAsync();
 
         driver.Navigate().Refresh();
         Assert.That(() => driver.SwitchTo().Alert().Accept(), Throws.TypeOf<NoAlertPresentException>());
         Assert.That(jsEngine.InitializationScripts, Is.Empty);
 
-        await jsEngine.AddInitializationScript(ScriptName, ScriptValue);
+        await jsEngine.AddInitializationScriptAsync(ScriptName, ScriptValue);
         driver.Navigate().Refresh();
         driver.SwitchTo().Alert().Accept();
 
-        await jsEngine.ClearAll();
+        await jsEngine.ClearAllAsync();
         driver.Navigate().Refresh();
         Assert.That(() => driver.SwitchTo().Alert().Accept(), Throws.TypeOf<NoAlertPresentException>());
         Assert.That(jsEngine.InitializationScripts, Is.Empty);
@@ -568,13 +568,13 @@ public class ExecutingJavascriptTest : DriverTestFixture
 
         var executedBindings = new List<string>();
         jsEngine.JavaScriptCallbackExecuted += AddToList;
-        await jsEngine.AddInitializationScript(ScriptName, ScriptValue);
-        await jsEngine.StartEventMonitoring();
+        await jsEngine.AddInitializationScriptAsync(ScriptName, ScriptValue);
+        await jsEngine.StartEventMonitoringAsync();
 
         driver.Navigate().Refresh();
         driver.SwitchTo().Alert().Accept();
 
-        await jsEngine.AddScriptCallbackBinding(ScriptName);
+        await jsEngine.AddScriptCallbackBindingAsync(ScriptName);
 
         driver.Navigate().Refresh();
         Assert.That(() => driver.SwitchTo().Alert().Accept(), Throws.TypeOf<NoAlertPresentException>());
@@ -587,11 +587,11 @@ public class ExecutingJavascriptTest : DriverTestFixture
         Assert.That(jsEngine.ScriptCallbackBindings, Does.Contain(ScriptName));
         oldCount = executedBindings.Count;
 
-        await jsEngine.RemoveScriptCallbackBinding(ScriptName);
+        await jsEngine.RemoveScriptCallbackBindingAsync(ScriptName);
         Assert.That(jsEngine.ScriptCallbackBindings, Is.Empty);
-        await jsEngine.AddScriptCallbackBinding(ScriptName);
+        await jsEngine.AddScriptCallbackBindingAsync(ScriptName);
         Assert.That(jsEngine.ScriptCallbackBindings, Does.Contain(ScriptName));
-        await jsEngine.ClearScriptCallbackBindings();
+        await jsEngine.ClearScriptCallbackBindingsAsync();
         Assert.That(jsEngine.ScriptCallbackBindings, Is.Empty);
 
         jsEngine.JavaScriptCallbackExecuted -= AddToList;

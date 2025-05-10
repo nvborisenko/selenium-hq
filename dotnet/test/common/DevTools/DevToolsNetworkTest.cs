@@ -84,15 +84,15 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task SendRequestWithUrlFiltersAndExtraHeadersAndVerifyRequests()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
-        await domains.Network.SetBlockedURLs(new CurrentCdpVersion.Network.SetBlockedURLsCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.SetBlockedURLsAsync(new CurrentCdpVersion.Network.SetBlockedURLsCommandSettings()
         {
             Urls = new string[] { "*://*/*.gif" }
         });
 
         var additionalHeaders = new CurrentCdpVersion.Network.Headers();
         additionalHeaders.Add("headerName", "headerValue");
-        await domains.Network.SetExtraHTTPHeaders(new CurrentCdpVersion.Network.SetExtraHTTPHeadersCommandSettings()
+        await domains.Network.SetExtraHTTPHeadersAsync(new CurrentCdpVersion.Network.SetExtraHTTPHeadersCommandSettings()
         {
             Headers = additionalHeaders
         });
@@ -142,12 +142,12 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task EmulateNetworkConditionOffline()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings()
         {
             MaxTotalBufferSize = 100000000
         });
 
-        await domains.Network.EmulateNetworkConditions(new CurrentCdpVersion.Network.EmulateNetworkConditionsCommandSettings()
+        await domains.Network.EmulateNetworkConditionsAsync(new CurrentCdpVersion.Network.EmulateNetworkConditionsCommandSettings()
         {
             Offline = true,
             Latency = 100,
@@ -186,7 +186,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
         string[] requestIdFromCache = new string[1];
 
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings()
         {
             MaxResourceBufferSize = 100000000
         });
@@ -213,7 +213,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         Assert.That(loadingFinishedSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
         Assert.That(servedFromCacheSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
 
-        var responseBody = await domains.Network.GetResponseBody(new CurrentCdpVersion.Network.GetResponseBodyCommandSettings()
+        var responseBody = await domains.Network.GetResponseBodyAsync(new CurrentCdpVersion.Network.GetResponseBodyCommandSettings()
         {
             RequestId = requestIdFromCache[0]
         });
@@ -230,7 +230,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
         string[] requestIds = new string[1];
 
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings()
         {
             MaxResourceBufferSize = 100000000
         });
@@ -247,7 +247,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         driver.Url = simpleTestPage;
         Assert.That(responseSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
 
-        var searchResponse = await domains.Network.SearchInResponseBody(new CurrentCdpVersion.Network.SearchInResponseBodyCommandSettings()
+        var searchResponse = await domains.Network.SearchInResponseBodyAsync(new CurrentCdpVersion.Network.SearchInResponseBodyCommandSettings()
         {
             RequestId = requestIds[0],
             Query = ".*",
@@ -264,7 +264,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifyCacheDisabledAndClearCache()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings()
         {
             MaxPostDataSize = 100000000
         });
@@ -280,13 +280,13 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         driver.Url = simpleTestPage;
         Assert.That(responseSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
 
-        await domains.Network.SetCacheDisabled(new CurrentCdpVersion.Network.SetCacheDisabledCommandSettings()
+        await domains.Network.SetCacheDisabledAsync(new CurrentCdpVersion.Network.SetCacheDisabledCommandSettings()
         {
             CacheDisabled = true
         });
 
         driver.Url = simpleTestPage;
-        await domains.Network.ClearBrowserCache();
+        await domains.Network.ClearBrowserCacheAsync();
     }
 
     [Test]
@@ -297,9 +297,9 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifyCertificatesAndOverrideUserAgent()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
 
-        await domains.Network.SetUserAgentOverride(new CurrentCdpVersion.Network.SetUserAgentOverrideCommandSettings()
+        await domains.Network.SetUserAgentOverrideAsync(new CurrentCdpVersion.Network.SetUserAgentOverrideCommandSettings()
         {
             UserAgent = "userAgent"
         });
@@ -316,7 +316,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         driver.Url = origin;
         Assert.That(requestSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
 
-        var result = await domains.Network.GetCertificate(new CurrentCdpVersion.Network.GetCertificateCommandSettings()
+        var result = await domains.Network.GetCertificateAsync(new CurrentCdpVersion.Network.GetCertificateCommandSettings()
         {
             Origin = origin
         });
@@ -331,7 +331,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifyResponseReceivedEventAndNetworkDisable()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
         ManualResetEventSlim responseSync = new ManualResetEventSlim(false);
         EventHandler<CurrentCdpVersion.Network.ResponseReceivedEventArgs> responseReceivedHandler = (sender, e) =>
         {
@@ -342,7 +342,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
 
         driver.Url = simpleTestPage;
         Assert.That(responseSync.Wait(TimeSpan.FromSeconds(5)), Is.True);
-        await domains.Network.Disable();
+        await domains.Network.DisableAsync();
     }
 
     [Test]
@@ -352,7 +352,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifyWebSocketOperations()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
 
         EventHandler<CurrentCdpVersion.Network.WebSocketCreatedEventArgs> webSocketCreatedHandler = (sender, e) =>
         {
@@ -394,7 +394,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifyRequestPostData()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
 
         string[] requestIds = new string[1];
 
@@ -416,7 +416,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
         bool requestEventFired = requestSync.Wait(TimeSpan.FromSeconds(5));
         Assert.That(requestEventFired, Is.True);
 
-        var response = await domains.Network.GetRequestPostData(new CurrentCdpVersion.Network.GetRequestPostDataCommandSettings()
+        var response = await domains.Network.GetRequestPostDataAsync(new CurrentCdpVersion.Network.GetRequestPostDataCommandSettings()
         {
             RequestId = requestIds[0]
         });
@@ -431,8 +431,8 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task ByPassServiceWorker()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
-        await domains.Network.SetBypassServiceWorker(new CurrentCdpVersion.Network.SetBypassServiceWorkerCommandSettings()
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.SetBypassServiceWorkerAsync(new CurrentCdpVersion.Network.SetBypassServiceWorkerCommandSettings()
         {
             Bypass = true
         });
@@ -446,7 +446,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task VerifySignedExchangeReceived()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
 
         ManualResetEventSlim requestSync = new ManualResetEventSlim(false);
         EventHandler<CurrentCdpVersion.Network.SignedExchangeReceivedEventArgs> signedExchangeReceivedHandler = (sender, e) =>
@@ -467,12 +467,12 @@ public class DevToolsNetworkTest : DevToolsTestFixture
     public async Task InterceptRequestAndContinue()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Network.Enable(new CurrentCdpVersion.Network.EnableCommandSettings());
+        await domains.Network.EnableAsync(new CurrentCdpVersion.Network.EnableCommandSettings());
 
         ManualResetEventSlim requestSync = new ManualResetEventSlim(false);
         EventHandler<CurrentCdpVersion.Network.RequestInterceptedEventArgs> requestInterceptedHandler = (async (sender, e) =>
         {
-            await domains.Network.ContinueInterceptedRequest(new CurrentCdpVersion.Network.ContinueInterceptedRequestCommandSettings()
+            await domains.Network.ContinueInterceptedRequestAsync(new CurrentCdpVersion.Network.ContinueInterceptedRequestCommandSettings()
             {
                 InterceptionId = e.InterceptionId
             });
@@ -486,7 +486,7 @@ public class DevToolsNetworkTest : DevToolsTestFixture
             InterceptionStage = CurrentCdpVersion.Network.InterceptionStage.HeadersReceived
         };
 
-        await domains.Network.SetRequestInterception(new CurrentCdpVersion.Network.SetRequestInterceptionCommandSettings()
+        await domains.Network.SetRequestInterceptionAsync(new CurrentCdpVersion.Network.SetRequestInterceptionCommandSettings()
         {
             Patterns = new CurrentCdpVersion.Network.RequestPattern[] { pattern }
         });

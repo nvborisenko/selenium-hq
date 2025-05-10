@@ -36,19 +36,19 @@ public abstract class Log
     /// Asynchronously enables manipulation of the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task Enable();
+    public abstract Task EnableAsync();
 
     /// <summary>
     /// Asynchronously disables manipulation of the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task Disable();
+    public abstract Task DisableAsync();
 
     /// <summary>
     /// Asynchronously clears the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task Clear();
+    public abstract Task ClearAsync();
 
     /// <summary>
     /// Raises the EntryAdded event.

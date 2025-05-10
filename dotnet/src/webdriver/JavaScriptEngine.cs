@@ -116,12 +116,12 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// Asynchronously starts monitoring for events from the browser's JavaScript engine.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task StartEventMonitoring()
+    public async Task StartEventMonitoringAsync()
     {
         this.session.Value.Domains.JavaScript.BindingCalled += OnScriptBindingCalled;
         this.session.Value.Domains.JavaScript.ExceptionThrown += OnJavaScriptExceptionThrown;
         this.session.Value.Domains.JavaScript.ConsoleApiCalled += OnConsoleApiCalled;
-        await this.EnableDomains().ConfigureAwait(false);
+        await this.EnableDomainsAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -138,24 +138,24 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// Enables monitoring for DOM changes.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task EnableDomMutationMonitoring()
+    public async Task EnableDomMutationMonitoringAsync()
     {
         // Execute the script to have it enabled on the currently loaded page.
         string script = GetMutationListenerScript();
-        await this.session.Value.Domains.JavaScript.Evaluate(script).ConfigureAwait(false);
+        await this.session.Value.Domains.JavaScript.EvaluateAsync(script).ConfigureAwait(false);
 
-        await this.AddScriptCallbackBinding(MonitorBindingName).ConfigureAwait(false);
-        await this.AddInitializationScript(MonitorBindingName, script).ConfigureAwait(false);
+        await this.AddScriptCallbackBindingAsync(MonitorBindingName).ConfigureAwait(false);
+        await this.AddInitializationScriptAsync(MonitorBindingName, script).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Disables monitoring for DOM changes.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task DisableDomMutationMonitoring()
+    public async Task DisableDomMutationMonitoringAsync()
     {
-        await this.RemoveScriptCallbackBinding(MonitorBindingName).ConfigureAwait(false);
-        await this.RemoveInitializationScript(MonitorBindingName).ConfigureAwait(false);
+        await this.RemoveScriptCallbackBindingAsync(MonitorBindingName).ConfigureAwait(false);
+        await this.RemoveInitializationScriptAsync(MonitorBindingName).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -165,7 +165,7 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <param name="script">The JavaScript to be loaded on every page.</param>
     /// <returns>A task containing an <see cref="InitializationScript"/> object representing the script to be loaded on each page.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="scriptName"/> or <paramref name="script"/> are <see langword="null"/>.</exception>
-    public async Task<InitializationScript> AddInitializationScript(string scriptName, string script)
+    public async Task<InitializationScript> AddInitializationScriptAsync(string scriptName, string script)
     {
         if (scriptName is null)
         {
@@ -182,9 +182,9 @@ public class JavaScriptEngine : IJavaScriptEngine
             return existingScript;
         }
 
-        await this.EnableDomains().ConfigureAwait(false);
+        await this.EnableDomainsAsync().ConfigureAwait(false);
 
-        string scriptId = await this.session.Value.Domains.JavaScript.AddScriptToEvaluateOnNewDocument(script).ConfigureAwait(false);
+        string scriptId = await this.session.Value.Domains.JavaScript.AddScriptToEvaluateOnNewDocumentAsync(script).ConfigureAwait(false);
 
         InitializationScript initializationScript = new InitializationScript(scriptId, scriptName, script);
         this.initializationScripts[scriptName] = initializationScript;
@@ -197,7 +197,7 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <param name="scriptName">The friendly name of the initialization script to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="scriptName"/> is <see langword="null"/>.</exception>
-    public async Task RemoveInitializationScript(string scriptName)
+    public async Task RemoveInitializationScriptAsync(string scriptName)
     {
         if (scriptName is null)
         {
@@ -207,7 +207,7 @@ public class JavaScriptEngine : IJavaScriptEngine
         if (this.initializationScripts.TryGetValue(scriptName, out InitializationScript? script))
         {
             string scriptId = script.ScriptId;
-            await this.session.Value.Domains.JavaScript.RemoveScriptToEvaluateOnNewDocument(scriptId).ConfigureAwait(false);
+            await this.session.Value.Domains.JavaScript.RemoveScriptToEvaluateOnNewDocumentAsync(scriptId).ConfigureAwait(false);
             this.initializationScripts.Remove(scriptName);
         }
     }
@@ -216,14 +216,14 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// Asynchronously removes all initialization scripts from being loaded on every document load.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task ClearInitializationScripts()
+    public async Task ClearInitializationScriptsAsync()
     {
         // Use a copy of the list to prevent the iterator from becoming invalid
         // when we modify the collection.
         List<string> scriptNames = new List<string>(this.initializationScripts.Keys);
         foreach (string scriptName in scriptNames)
         {
-            await this.RemoveInitializationScript(scriptName).ConfigureAwait(false);
+            await this.RemoveInitializationScriptAsync(scriptName).ConfigureAwait(false);
         }
     }
 
@@ -234,7 +234,7 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <param name="script">The JavaScript to pin</param>
     /// <returns>A task containing a <see cref="PinnedScript"/> object to use to execute the script.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="script"/> is <see langword="null"/>.</exception>
-    public async Task<PinnedScript> PinScript(string script)
+    public async Task<PinnedScript> PinScriptAsync(string script)
     {
         if (script == null)
         {
@@ -245,11 +245,11 @@ public class JavaScriptEngine : IJavaScriptEngine
 
         // We do an "Evaluate" first so as to immediately create the script on the loaded
         // page, then will add it to the initialization of future pages.
-        await this.EnableDomains().ConfigureAwait(false);
+        await this.EnableDomainsAsync().ConfigureAwait(false);
 
         string creationScript = PinnedScript.MakeCreationScript(newScriptHandle, script);
-        await this.session.Value.Domains.JavaScript.Evaluate(creationScript).ConfigureAwait(false);
-        string scriptId = await this.session.Value.Domains.JavaScript.AddScriptToEvaluateOnNewDocument(creationScript).ConfigureAwait(false);
+        await this.session.Value.Domains.JavaScript.EvaluateAsync(creationScript).ConfigureAwait(false);
+        string scriptId = await this.session.Value.Domains.JavaScript.AddScriptToEvaluateOnNewDocumentAsync(creationScript).ConfigureAwait(false);
 
         PinnedScript pinnedScript = new PinnedScript(script, newScriptHandle, scriptId);
         this.pinnedScripts[pinnedScript.Handle] = pinnedScript;
@@ -262,7 +262,7 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <param name="script">The <see cref="PinnedScript"/> object to unpin.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="script"/> is <see langword="null"/>.</exception>
-    public async Task UnpinScript(PinnedScript script)
+    public async Task UnpinScriptAsync(PinnedScript script)
     {
         if (script == null)
         {
@@ -271,8 +271,8 @@ public class JavaScriptEngine : IJavaScriptEngine
 
         if (this.pinnedScripts.ContainsKey(script.Handle))
         {
-            await this.session.Value.Domains.JavaScript.Evaluate(script.MakeRemovalScript()).ConfigureAwait(false);
-            await this.session.Value.Domains.JavaScript.RemoveScriptToEvaluateOnNewDocument(script.ScriptId).ConfigureAwait(false);
+            await this.session.Value.Domains.JavaScript.EvaluateAsync(script.MakeRemovalScript()).ConfigureAwait(false);
+            await this.session.Value.Domains.JavaScript.RemoveScriptToEvaluateOnNewDocumentAsync(script.ScriptId).ConfigureAwait(false);
             this.pinnedScripts.Remove(script.Handle);
         }
     }
@@ -285,7 +285,7 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="bindingName"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">If A binding with the specified name already exists.</exception>
-    public async Task AddScriptCallbackBinding(string bindingName)
+    public async Task AddScriptCallbackBindingAsync(string bindingName)
     {
         if (bindingName is null)
         {
@@ -297,8 +297,8 @@ public class JavaScriptEngine : IJavaScriptEngine
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "A binding named {0} has already been added", bindingName));
         }
 
-        await this.EnableDomains().ConfigureAwait(false);
-        await this.session.Value.Domains.JavaScript.AddBinding(bindingName).ConfigureAwait(false);
+        await this.EnableDomainsAsync().ConfigureAwait(false);
+        await this.session.Value.Domains.JavaScript.AddBindingAsync(bindingName).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -307,14 +307,14 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// <param name="bindingName">The name of the callback to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="bindingName"/> is <see langword="null"/>.</exception>
-    public async Task RemoveScriptCallbackBinding(string bindingName)
+    public async Task RemoveScriptCallbackBindingAsync(string bindingName)
     {
         if (bindingName is null)
         {
             throw new ArgumentNullException(nameof(bindingName));
         }
 
-        await this.session.Value.Domains.JavaScript.RemoveBinding(bindingName).ConfigureAwait(false);
+        await this.session.Value.Domains.JavaScript.RemoveBindingAsync(bindingName).ConfigureAwait(false);
         _ = this.bindings.Remove(bindingName);
     }
 
@@ -322,14 +322,14 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// Asynchronously removes all bindings to JavaScript callbacks.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task ClearScriptCallbackBindings()
+    public async Task ClearScriptCallbackBindingsAsync()
     {
         // Use a copy of the list to prevent the iterator from becoming invalid
         // when we modify the collection.
         List<string> bindingList = new List<string>(this.bindings);
         foreach (string binding in bindingList)
         {
-            await this.RemoveScriptCallbackBinding(binding).ConfigureAwait(false);
+            await this.RemoveScriptCallbackBindingAsync(binding).ConfigureAwait(false);
         }
     }
 
@@ -339,11 +339,11 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// all pinned scripts.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task ClearAll()
+    public async Task ClearAllAsync()
     {
-        await this.ClearPinnedScripts().ConfigureAwait(false);
-        await this.ClearInitializationScripts().ConfigureAwait(false);
-        await this.ClearScriptCallbackBindings().ConfigureAwait(false);
+        await this.ClearPinnedScriptsAsync().ConfigureAwait(false);
+        await this.ClearInitializationScriptsAsync().ConfigureAwait(false);
+        await this.ClearScriptCallbackBindingsAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -352,10 +352,10 @@ public class JavaScriptEngine : IJavaScriptEngine
     /// pinned scripts, and stops listening for events.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task Reset()
+    public async Task ResetAsync()
     {
         this.StopEventMonitoring();
-        await ClearAll().ConfigureAwait(false);
+        await ClearAllAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -387,23 +387,23 @@ public class JavaScriptEngine : IJavaScriptEngine
         }
     }
 
-    private async Task ClearPinnedScripts()
+    private async Task ClearPinnedScriptsAsync()
     {
         // Use a copy of the list to prevent the iterator from becoming invalid
         // when we modify the collection.
         List<string> scriptHandles = new List<string>(this.pinnedScripts.Keys);
         foreach (string scriptHandle in scriptHandles)
         {
-            await this.UnpinScript(this.pinnedScripts[scriptHandle]).ConfigureAwait(false);
+            await this.UnpinScriptAsync(this.pinnedScripts[scriptHandle]).ConfigureAwait(false);
         }
     }
 
-    private async Task EnableDomains()
+    private async Task EnableDomainsAsync()
     {
         if (!this.isEnabled)
         {
-            await this.session.Value.Domains.JavaScript.EnablePage().ConfigureAwait(false);
-            await this.session.Value.Domains.JavaScript.EnableRuntime().ConfigureAwait(false);
+            await this.session.Value.Domains.JavaScript.EnablePageAsync().ConfigureAwait(false);
+            await this.session.Value.Domains.JavaScript.EnableRuntimeAsync().ConfigureAwait(false);
             this.isEnabled = true;
         }
     }

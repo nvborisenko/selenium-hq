@@ -40,22 +40,22 @@ public class DevToolsTargetTest : DevToolsTestFixture
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
         driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("devToolsConsoleTest.html");
-        var response = await domains.Target.GetTargets(new CurrentCdpVersion.Target.GetTargetsCommandSettings());
+        var response = await domains.Target.GetTargetsAsync(new CurrentCdpVersion.Target.GetTargetsCommandSettings());
         CurrentCdpVersion.Target.TargetInfo[] allTargets = response.TargetInfos;
         foreach (CurrentCdpVersion.Target.TargetInfo targetInfo in allTargets)
         {
             ValidateTarget(targetInfo);
-            await domains.Target.ActivateTarget(new CurrentCdpVersion.Target.ActivateTargetCommandSettings()
+            await domains.Target.ActivateTargetAsync(new CurrentCdpVersion.Target.ActivateTargetCommandSettings()
             {
                 TargetId = targetInfo.TargetId
             });
-            var attachResponse = await domains.Target.AttachToTarget(new CurrentCdpVersion.Target.AttachToTargetCommandSettings()
+            var attachResponse = await domains.Target.AttachToTargetAsync(new CurrentCdpVersion.Target.AttachToTargetCommandSettings()
             {
                 TargetId = targetInfo.TargetId,
                 Flatten = true
             });
             ValidateSession(attachResponse.SessionId);
-            var getInfoResponse = await domains.Target.GetTargetInfo(new CurrentCdpVersion.Target.GetTargetInfoCommandSettings()
+            var getInfoResponse = await domains.Target.GetTargetInfoAsync(new CurrentCdpVersion.Target.GetTargetInfoCommandSettings()
             {
                 TargetId = targetInfo.TargetId
             });
@@ -80,24 +80,24 @@ public class DevToolsTargetTest : DevToolsTestFixture
             ValidateMessage(e);
             sync.Set();
         };
-        var targetsResponse = await domains.Target.GetTargets(new CurrentCdpVersion.Target.GetTargetsCommandSettings());
+        var targetsResponse = await domains.Target.GetTargetsAsync(new CurrentCdpVersion.Target.GetTargetsCommandSettings());
         allTargets = targetsResponse.TargetInfos;
         ValidateTargetsInfos(allTargets);
         ValidateTarget(allTargets[0]);
         targetInfo = allTargets[0];
-        await domains.Target.ActivateTarget(new CurrentCdpVersion.Target.ActivateTargetCommandSettings()
+        await domains.Target.ActivateTargetAsync(new CurrentCdpVersion.Target.ActivateTargetCommandSettings()
         {
             TargetId = targetInfo.TargetId
         });
 
-        var attachResponse = await domains.Target.AttachToTarget(new CurrentCdpVersion.Target.AttachToTargetCommandSettings()
+        var attachResponse = await domains.Target.AttachToTargetAsync(new CurrentCdpVersion.Target.AttachToTargetCommandSettings()
         {
             TargetId = targetInfo.TargetId,
             Flatten = false
         });
         sessionId = attachResponse.SessionId;
         ValidateSession(sessionId);
-        await domains.Target.SendMessageToTarget(new CurrentCdpVersion.Target.SendMessageToTargetCommandSettings()
+        await domains.Target.SendMessageToTargetAsync(new CurrentCdpVersion.Target.SendMessageToTargetCommandSettings()
         {
             Message = "{\"id\":" + id + ",\"method\":\"Page.bringToFront\"}",
             SessionId = sessionId,
@@ -137,7 +137,7 @@ public class DevToolsTargetTest : DevToolsTestFixture
         };
         domains.Target.TargetInfoChanged += targetInfoChangedHandler;
 
-        var response = await domains.Target.CreateTarget(new CurrentCdpVersion.Target.CreateTargetCommandSettings()
+        var response = await domains.Target.CreateTargetAsync(new CurrentCdpVersion.Target.CreateTargetCommandSettings()
         {
             Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("devToolsConsoleTest.html"),
             NewWindow = true,
@@ -145,12 +145,12 @@ public class DevToolsTargetTest : DevToolsTestFixture
         });
 
         ValidateTargetId(response.TargetId);
-        await domains.Target.SetDiscoverTargets(new CurrentCdpVersion.Target.SetDiscoverTargetsCommandSettings()
+        await domains.Target.SetDiscoverTargetsAsync(new CurrentCdpVersion.Target.SetDiscoverTargetsCommandSettings()
         {
             Discover = true
         });
 
-        var closeResponse = await domains.Target.CloseTarget(new CurrentCdpVersion.Target.CloseTargetCommandSettings()
+        var closeResponse = await domains.Target.CloseTargetAsync(new CurrentCdpVersion.Target.CloseTargetCommandSettings()
         {
             TargetId = response.TargetId
         });

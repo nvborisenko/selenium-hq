@@ -62,26 +62,26 @@ public class Intercept : IAsyncDisposable
 
     public async Task OnBeforeRequestSentAsync(Func<BeforeRequestSentEventArgs, Task> handler, SubscriptionOptions? options = null)
     {
-        var subscription = await _bidi.Network.OnBeforeRequestSentAsync(async args => await Filter(args, handler), options).ConfigureAwait(false);
+        var subscription = await _bidi.Network.OnBeforeRequestSentAsync(async args => await FilterAsync(args, handler), options).ConfigureAwait(false);
 
         OnBeforeRequestSentSubscriptions.Add(subscription);
     }
 
     public async Task OnResponseStartedAsync(Func<ResponseStartedEventArgs, Task> handler, SubscriptionOptions? options = null)
     {
-        var subscription = await _bidi.Network.OnResponseStartedAsync(async args => await Filter(args, handler), options).ConfigureAwait(false);
+        var subscription = await _bidi.Network.OnResponseStartedAsync(async args => await FilterAsync(args, handler), options).ConfigureAwait(false);
 
         OnResponseStartedSubscriptions.Add(subscription);
     }
 
     public async Task OnAuthRequiredAsync(Func<AuthRequiredEventArgs, Task> handler, SubscriptionOptions? options = null)
     {
-        var subscription = await _bidi.Network.OnAuthRequiredAsync(async args => await Filter(args, handler), options).ConfigureAwait(false);
+        var subscription = await _bidi.Network.OnAuthRequiredAsync(async args => await FilterAsync(args, handler), options).ConfigureAwait(false);
 
         OnAuthRequiredSubscriptions.Add(subscription);
     }
 
-    private async Task Filter(BeforeRequestSentEventArgs args, Func<BeforeRequestSentEventArgs, Task> handler)
+    private async Task FilterAsync(BeforeRequestSentEventArgs args, Func<BeforeRequestSentEventArgs, Task> handler)
     {
         if (args.Intercepts?.Contains(this) is true && args.IsBlocked)
         {
@@ -89,7 +89,7 @@ public class Intercept : IAsyncDisposable
         }
     }
 
-    private async Task Filter(ResponseStartedEventArgs args, Func<ResponseStartedEventArgs, Task> handler)
+    private async Task FilterAsync(ResponseStartedEventArgs args, Func<ResponseStartedEventArgs, Task> handler)
     {
         if (args.Intercepts?.Contains(this) is true && args.IsBlocked)
         {
@@ -97,7 +97,7 @@ public class Intercept : IAsyncDisposable
         }
     }
 
-    private async Task Filter(AuthRequiredEventArgs args, Func<AuthRequiredEventArgs, Task> handler)
+    private async Task FilterAsync(AuthRequiredEventArgs args, Func<AuthRequiredEventArgs, Task> handler)
     {
         if (args.Intercepts?.Contains(this) is true && args.IsBlocked)
         {

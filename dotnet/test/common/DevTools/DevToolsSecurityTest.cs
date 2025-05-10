@@ -37,9 +37,9 @@ public class DevToolsSecurityTest : DevToolsTestFixture
     public async Task LoadInsecureWebsite()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Security.Enable();
+        await domains.Security.EnableAsync();
 
-        await domains.Security.SetIgnoreCertificateErrors(new CurrentCdpVersion.Security.SetIgnoreCertificateErrorsCommandSettings()
+        await domains.Security.SetIgnoreCertificateErrorsAsync(new CurrentCdpVersion.Security.SetIgnoreCertificateErrorsCommandSettings()
         {
             Ignore = false
         });
@@ -56,7 +56,7 @@ public class DevToolsSecurityTest : DevToolsTestFixture
         driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("devToolsSecurityTest");
         sync.Wait(TimeSpan.FromSeconds(5));
 
-        await domains.Security.Disable();
+        await domains.Security.DisableAsync();
 
         Assert.That(driver.PageSource, Contains.Substring("Security Test"));
         Assert.That(summary, Contains.Substring("This page has a non-HTTPS secure origin"));
@@ -69,9 +69,9 @@ public class DevToolsSecurityTest : DevToolsTestFixture
     public async Task LoadSecureWebsite()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Security.Enable();
+        await domains.Security.EnableAsync();
 
-        await domains.Security.SetIgnoreCertificateErrors(new CurrentCdpVersion.Security.SetIgnoreCertificateErrorsCommandSettings()
+        await domains.Security.SetIgnoreCertificateErrorsAsync(new CurrentCdpVersion.Security.SetIgnoreCertificateErrorsCommandSettings()
         {
             Ignore = true
         });

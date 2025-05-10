@@ -484,7 +484,7 @@ public class RemoteWebDriver : WebDriver, IDevTools, IHasDownloads
             try
             {
                 DevToolsSession session = new DevToolsSession(debuggerAddress, options);
-                Task.Run(async () => await session.StartSession()).GetAwaiter().GetResult();
+                Task.Run(async () => await session.StartSessionAsync()).GetAwaiter().GetResult();
                 this.devToolsSession = session;
             }
             catch (Exception e)
@@ -599,7 +599,7 @@ public class RemoteWebDriver : WebDriver, IDevTools, IHasDownloads
     {
         if (this.devToolsSession != null)
         {
-            Task.Run(async () => await this.devToolsSession.StopSession(true)).GetAwaiter().GetResult();
+            Task.Run(async () => await this.devToolsSession.StopSessionAsync(true)).GetAwaiter().GetResult();
         }
     }
 

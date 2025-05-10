@@ -46,7 +46,7 @@ public abstract class Target
     /// contains the list of <see cref="TargetInfo"/> objects describing the
     /// targets available for this session.
     /// </returns>
-    public abstract Task<ReadOnlyCollection<TargetInfo>> GetTargets(object? settings = null);
+    public abstract Task<ReadOnlyCollection<TargetInfo>> GetTargetsAsync(object? settings = null);
 
     /// <summary>
     /// Asynchronously attaches to a target.
@@ -56,7 +56,7 @@ public abstract class Target
     /// A task representing the asynchronous attach operation. The task result contains the
     /// session ID established for commands to the target attached to.
     /// </returns>
-    public abstract Task<string> AttachToTarget(string targetId);
+    public abstract Task<string> AttachToTargetAsync(string targetId);
 
     /// <summary>
     /// Asynchronously detaches from a target.
@@ -66,13 +66,13 @@ public abstract class Target
     /// <returns>
     /// A task representing the asynchronous detach operation.
     /// </returns>
-    public abstract Task DetachFromTarget(string? sessionId = null, string? targetId = null);
+    public abstract Task DetachFromTargetAsync(string? sessionId = null, string? targetId = null);
 
     /// <summary>
     /// Asynchronously sets the DevTools Protocol connection to automatically attach to new targets.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task SetAutoAttach();
+    public abstract Task SetAutoAttachAsync();
 
     internal abstract ICommand CreateSetAutoAttachCommand(bool waitForDebuggerOnStart);
 

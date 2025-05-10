@@ -73,14 +73,14 @@ public class NetworkManager : INetwork
     /// <returns>A task that represents the asynchronous operation.</returns>
     [RequiresUnreferencedCode("NetworkManager is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported")]
     [RequiresDynamicCode("NetworkManager is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported.")]
-    public async Task StartMonitoring()
+    public async Task StartMonitoringAsync()
     {
-        this.session.Value.Domains.Network.RequestPaused += OnRequestPaused;
-        this.session.Value.Domains.Network.AuthRequired += OnAuthRequired;
-        this.session.Value.Domains.Network.ResponsePaused += OnResponsePaused;
-        await this.session.Value.Domains.Network.EnableFetchForAllPatterns().ConfigureAwait(false);
-        await this.session.Value.Domains.Network.EnableNetwork().ConfigureAwait(false);
-        await this.session.Value.Domains.Network.DisableNetworkCaching().ConfigureAwait(false);
+        this.session.Value.Domains.Network.RequestPaused += OnRequestPausedAsync;
+        this.session.Value.Domains.Network.AuthRequired += OnAuthRequiredAsync;
+        this.session.Value.Domains.Network.ResponsePaused += OnResponsePausedAsync;
+        await this.session.Value.Domains.Network.EnableFetchForAllPatternsAsync().ConfigureAwait(false);
+        await this.session.Value.Domains.Network.EnableNetworkAsync().ConfigureAwait(false);
+        await this.session.Value.Domains.Network.DisableNetworkCachingAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -89,12 +89,12 @@ public class NetworkManager : INetwork
     /// <returns>A task that represents the asynchronous operation.</returns>
     [RequiresUnreferencedCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported")]
     [RequiresDynamicCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported.")]
-    public async Task StopMonitoring()
+    public async Task StopMonitoringAsync()
     {
-        this.session.Value.Domains.Network.ResponsePaused -= OnResponsePaused;
-        this.session.Value.Domains.Network.AuthRequired -= OnAuthRequired;
-        this.session.Value.Domains.Network.RequestPaused -= OnRequestPaused;
-        await this.session.Value.Domains.Network.EnableNetworkCaching().ConfigureAwait(false);
+        this.session.Value.Domains.Network.ResponsePaused -= OnResponsePausedAsync;
+        this.session.Value.Domains.Network.AuthRequired -= OnAuthRequiredAsync;
+        this.session.Value.Domains.Network.RequestPaused -= OnRequestPausedAsync;
+        await this.session.Value.Domains.Network.EnableNetworkCachingAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ public class NetworkManager : INetwork
         this.responseHandlers.Clear();
     }
 
-    private async Task OnAuthRequired(object sender, AuthRequiredEventArgs e)
+    private async Task OnAuthRequiredAsync(object sender, AuthRequiredEventArgs e)
     {
         string requestId = e.RequestId;
         Uri uri = new Uri(e.Uri);
@@ -207,7 +207,7 @@ public class NetworkManager : INetwork
             if (authenticationHandler.UriMatcher!.Invoke(uri))
             {
                 PasswordCredentials credentials = (PasswordCredentials)authenticationHandler.Credentials!;
-                await this.session.Value.Domains.Network.ContinueWithAuth(e.RequestId, credentials.UserName, credentials.Password).ConfigureAwait(false);
+                await this.session.Value.Domains.Network.ContinueWithAuthAsync(e.RequestId, credentials.UserName, credentials.Password).ConfigureAwait(false);
                 successfullyAuthenticated = true;
                 break;
             }
@@ -215,11 +215,11 @@ public class NetworkManager : INetwork
 
         if (!successfullyAuthenticated)
         {
-            await this.session.Value.Domains.Network.CancelAuth(e.RequestId).ConfigureAwait(false);
+            await this.session.Value.Domains.Network.CancelAuthAsync(e.RequestId).ConfigureAwait(false);
         }
     }
 
-    private async Task OnRequestPaused(object sender, RequestPausedEventArgs e)
+    private async Task OnRequestPausedAsync(object sender, RequestPausedEventArgs e)
     {
         if (this.NetworkRequestSent != null)
         {
@@ -232,27 +232,27 @@ public class NetworkManager : INetwork
             {
                 if (handler.RequestTransformer != null)
                 {
-                    await this.session.Value.Domains.Network.ContinueRequest(handler.RequestTransformer(e.RequestData)).ConfigureAwait(false);
+                    await this.session.Value.Domains.Network.ContinueRequestAsync(handler.RequestTransformer(e.RequestData)).ConfigureAwait(false);
                     return;
                 }
 
                 if (handler.ResponseSupplier != null)
                 {
-                    await this.session.Value.Domains.Network.ContinueRequestWithResponse(e.RequestData, handler.ResponseSupplier(e.RequestData)).ConfigureAwait(false);
+                    await this.session.Value.Domains.Network.ContinueRequestWithResponseAsync(e.RequestData, handler.ResponseSupplier(e.RequestData)).ConfigureAwait(false);
                     return;
                 }
             }
         }
 
-        await this.session.Value.Domains.Network.ContinueRequestWithoutModification(e.RequestData).ConfigureAwait(false);
+        await this.session.Value.Domains.Network.ContinueRequestWithoutModificationAsync(e.RequestData).ConfigureAwait(false);
     }
 
-    private async Task OnResponsePaused(object sender, ResponsePausedEventArgs e)
+    private async Task OnResponsePausedAsync(object sender, ResponsePausedEventArgs e)
     {
         if (e.ResponseData.Headers.Count > 0)
         {
             // If no headers are present, the body cannot be retrieved.
-            await this.session.Value.Domains.Network.AddResponseBody(e.ResponseData).ConfigureAwait(false);
+            await this.session.Value.Domains.Network.AddResponseBodyAsync(e.ResponseData).ConfigureAwait(false);
         }
 
         if (this.NetworkResponseReceived != null)
@@ -269,11 +269,11 @@ public class NetworkManager : INetwork
                 // It might be better to refactor that method signature to simply pass the request ID, or
                 // alternatively, just pass the response data, which should also contain the request ID anyway.
                 HttpRequestData requestData = new HttpRequestData { RequestId = e.ResponseData.RequestId };
-                await this.session.Value.Domains.Network.ContinueRequestWithResponse(requestData, handler.ResponseTransformer!(e.ResponseData)).ConfigureAwait(false);
+                await this.session.Value.Domains.Network.ContinueRequestWithResponseAsync(requestData, handler.ResponseTransformer!(e.ResponseData)).ConfigureAwait(false);
                 return;
             }
         }
 
-        await this.session.Value.Domains.Network.ContinueResponseWithoutModification(e.ResponseData).ConfigureAwait(false);
+        await this.session.Value.Domains.Network.ContinueResponseWithoutModificationAsync(e.ResponseData).ConfigureAwait(false);
     }
 }

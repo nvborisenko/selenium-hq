@@ -182,7 +182,7 @@ public class HttpCommandExecutor : ICommandExecutor
         HttpResponseInfo responseInfo;
         try
         {
-            responseInfo = await this.MakeHttpRequest(requestInfo).ConfigureAwait(false);
+            responseInfo = await this.MakeHttpRequestAsync(requestInfo).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
         {
@@ -275,7 +275,7 @@ public class HttpCommandExecutor : ICommandExecutor
         return client;
     }
 
-    private async Task<HttpResponseInfo> MakeHttpRequest(HttpRequestInfo requestInfo)
+    private async Task<HttpResponseInfo> MakeHttpRequestAsync(HttpRequestInfo requestInfo)
     {
         SendingRemoteHttpRequestEventArgs eventArgs = new SendingRemoteHttpRequestEventArgs(requestInfo.HttpMethod, requestInfo.FullUri.ToString(), requestInfo.RequestBody);
         this.OnSendingRemoteHttpRequest(eventArgs);

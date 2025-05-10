@@ -36,12 +36,12 @@ public class DevToolsProfilerTest : DevToolsTestFixture
     public async Task SimpleStartStopAndGetProfilerTest()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Profiler.Enable();
-        await domains.Profiler.Start();
-        var response = await domains.Profiler.Stop();
+        await domains.Profiler.EnableAsync();
+        await domains.Profiler.StartAsync();
+        var response = await domains.Profiler.StopAsync();
         var profiler = response.Profile;
         ValidateProfile(profiler);
-        await domains.Profiler.Disable();
+        await domains.Profiler.DisableAsync();
     }
 
     [Test]
@@ -51,18 +51,18 @@ public class DevToolsProfilerTest : DevToolsTestFixture
     public async Task SampleGetBestEffortProfilerTest()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Profiler.Enable();
+        await domains.Profiler.EnableAsync();
         driver.Url = simpleTestPage;
-        await domains.Profiler.SetSamplingInterval(new CurrentCdpVersion.Profiler.SetSamplingIntervalCommandSettings()
+        await domains.Profiler.SetSamplingIntervalAsync(new CurrentCdpVersion.Profiler.SetSamplingIntervalCommandSettings()
         {
             Interval = 30
         });
 
-        var response = await domains.Profiler.GetBestEffortCoverage();
+        var response = await domains.Profiler.GetBestEffortCoverageAsync();
         var bestEffort = response.Result;
         Assert.That(bestEffort, Is.Not.Null);
         Assert.That(bestEffort.Length, Is.GreaterThan(0));
-        await domains.Profiler.Disable();
+        await domains.Profiler.DisableAsync();
     }
 
     [Test]
@@ -72,21 +72,21 @@ public class DevToolsProfilerTest : DevToolsTestFixture
     public async Task SampleSetStartPreciseCoverageTest()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Profiler.Enable();
+        await domains.Profiler.EnableAsync();
         driver.Url = simpleTestPage;
-        await domains.Profiler.StartPreciseCoverage(new CurrentCdpVersion.Profiler.StartPreciseCoverageCommandSettings()
+        await domains.Profiler.StartPreciseCoverageAsync(new CurrentCdpVersion.Profiler.StartPreciseCoverageCommandSettings()
         {
             CallCount = true,
             Detailed = true
         });
-        await domains.Profiler.Start();
-        var coverageResponse = await domains.Profiler.TakePreciseCoverage();
+        await domains.Profiler.StartAsync();
+        var coverageResponse = await domains.Profiler.TakePreciseCoverageAsync();
         var pc = coverageResponse.Result;
         Assert.That(pc, Is.Not.Null);
-        var response = await domains.Profiler.Stop();
+        var response = await domains.Profiler.StopAsync();
         var profiler = response.Profile;
         ValidateProfile(profiler);
-        await domains.Profiler.Disable();
+        await domains.Profiler.DisableAsync();
     }
 
 
@@ -97,7 +97,7 @@ public class DevToolsProfilerTest : DevToolsTestFixture
     public async Task SampleProfileEvents()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Profiler.Enable();
+        await domains.Profiler.EnableAsync();
         driver.Url = simpleTestPage;
         ManualResetEventSlim startSync = new ManualResetEventSlim(false);
         EventHandler<CurrentCdpVersion.Profiler.ConsoleProfileStartedEventArgs> consoleProfileStartedHandler = (sender, e) =>
@@ -107,7 +107,7 @@ public class DevToolsProfilerTest : DevToolsTestFixture
         };
         domains.Profiler.ConsoleProfileStarted += consoleProfileStartedHandler;
 
-        await domains.Profiler.Start();
+        await domains.Profiler.StartAsync();
         startSync.Wait(TimeSpan.FromSeconds(5));
         driver.Navigate().Refresh();
 
@@ -119,12 +119,12 @@ public class DevToolsProfilerTest : DevToolsTestFixture
         };
         domains.Profiler.ConsoleProfileFinished += consoleProfileFinishedHandler;
 
-        var response = await domains.Profiler.Stop();
+        var response = await domains.Profiler.StopAsync();
         finishSync.Wait(TimeSpan.FromSeconds(5));
 
         var profiler = response.Profile;
         ValidateProfile(profiler);
-        await domains.Profiler.Disable();
+        await domains.Profiler.DisableAsync();
     }
 
     private void ValidateProfile(CurrentCdpVersion.Profiler.Profile profiler)

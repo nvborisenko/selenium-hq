@@ -45,27 +45,27 @@ public class V134Log : DevTools.Log
     /// Asynchronously enables manipulation of the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task Enable()
+    public override async Task EnableAsync()
     {
-        await adapter.Enable().ConfigureAwait(false);
+        await adapter.EnableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously disables manipulation of the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task Disable()
+    public override async Task DisableAsync()
     {
-        await adapter.Disable().ConfigureAwait(false);
+        await adapter.DisableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously clears the browser's log.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task Clear()
+    public override async Task ClearAsync()
     {
-        await adapter.Clear().ConfigureAwait(false);
+        await adapter.ClearAsync().ConfigureAwait(false);
     }
 
     private void OnAdapterEntryAdded(object? sender, Log.EntryAddedEventArgs e)

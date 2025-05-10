@@ -62,7 +62,7 @@ public interface IJavaScriptEngine : IDisposable
     /// Asynchronously starts monitoring for events from the browser's JavaScript engine.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task StartEventMonitoring();
+    Task StartEventMonitoringAsync();
 
     /// <summary>
     /// Stops monitoring for events from the browser's JavaScript engine.
@@ -73,13 +73,13 @@ public interface IJavaScriptEngine : IDisposable
     /// Enables monitoring for DOM changes.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task EnableDomMutationMonitoring();
+    Task EnableDomMutationMonitoringAsync();
 
     /// <summary>
     /// Disables monitoring for DOM changes.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task DisableDomMutationMonitoring();
+    Task DisableDomMutationMonitoringAsync();
 
     /// <summary>
     /// Asynchronously adds JavaScript to be loaded on every document load.
@@ -88,7 +88,7 @@ public interface IJavaScriptEngine : IDisposable
     /// <param name="script">The JavaScript to be loaded on every page.</param>
     /// <returns>A task containing an <see cref="InitializationScript"/> object representing the script to be loaded on each page.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="scriptName"/> or <paramref name="script"/> are <see langword="null"/>.</exception>
-    Task<InitializationScript> AddInitializationScript(string scriptName, string script);
+    Task<InitializationScript> AddInitializationScriptAsync(string scriptName, string script);
 
     /// <summary>
     /// Asynchronously removes JavaScript from being loaded on every document load.
@@ -96,14 +96,14 @@ public interface IJavaScriptEngine : IDisposable
     /// <param name="scriptName">The friendly name of the initialization script to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="scriptName"/> is <see langword="null"/>.</exception>
-    Task RemoveInitializationScript(string scriptName);
+    Task RemoveInitializationScriptAsync(string scriptName);
 
     /// <summary>
     /// Asynchronously removes all initialization scripts from being
     /// loaded on every document load.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ClearInitializationScripts();
+    Task ClearInitializationScriptsAsync();
 
     /// <summary>
     /// Pins a JavaScript snippet for execution in the browser without transmitting the
@@ -112,7 +112,7 @@ public interface IJavaScriptEngine : IDisposable
     /// <param name="script">The JavaScript to pin</param>
     /// <returns>A task containing a <see cref="PinnedScript"/> object to use to execute the script.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="script"/> is <see langword="null"/>.</exception>
-    Task<PinnedScript> PinScript(string script);
+    Task<PinnedScript> PinScriptAsync(string script);
 
     /// <summary>
     /// Unpins a previously pinned script from the browser.
@@ -120,7 +120,7 @@ public interface IJavaScriptEngine : IDisposable
     /// <param name="script">The <see cref="PinnedScript"/> object to unpin.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="script"/> is <see langword="null"/>.</exception>
-    Task UnpinScript(PinnedScript script);
+    Task UnpinScriptAsync(PinnedScript script);
 
     /// <summary>
     /// Asynchronously adds a binding to a callback method that will raise
@@ -131,7 +131,7 @@ public interface IJavaScriptEngine : IDisposable
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="bindingName"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException">If A binding with the specified name already exists.</exception>
-    Task AddScriptCallbackBinding(string bindingName);
+    Task AddScriptCallbackBindingAsync(string bindingName);
 
     /// <summary>
     /// Asynchronously removes a binding to a JavaScript callback.
@@ -139,20 +139,20 @@ public interface IJavaScriptEngine : IDisposable
     /// <param name="bindingName">The name of the callback to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="bindingName"/> is <see langword="null"/>.</exception>
-    Task RemoveScriptCallbackBinding(string bindingName);
+    Task RemoveScriptCallbackBindingAsync(string bindingName);
 
     /// <summary>
     /// Asynchronously removes all bindings to JavaScript callbacks.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ClearScriptCallbackBindings();
+    Task ClearScriptCallbackBindingsAsync();
 
     /// <summary>
     /// Asynchronously removes all bindings to JavaScript callbacks and all
     /// initialization scripts from being loaded for each document.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ClearAll();
+    Task ClearAllAsync();
 
     /// <summary>
     /// Asynchronously removes all bindings to JavaScript callbacks, all
@@ -160,5 +160,5 @@ public interface IJavaScriptEngine : IDisposable
     /// stops listening for events.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task Reset();
+    Task ResetAsync();
 }

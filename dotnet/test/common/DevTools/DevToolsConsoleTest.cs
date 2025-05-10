@@ -48,13 +48,13 @@ public class DevToolsConsoleTest : DevToolsTestFixture
 
         domains.Console.MessageAdded += messageAddedHandler;
 
-        await domains.Console.Enable();
+        await domains.Console.EnableAsync();
 
         driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("devToolsConsoleTest.html");
         ((IJavaScriptExecutor)driver).ExecuteScript("console.log('" + consoleMessage + "');");
         sync.Wait(TimeSpan.FromSeconds(5));
         domains.Console.MessageAdded -= messageAddedHandler;
 
-        await domains.Console.Disable();
+        await domains.Console.DisableAsync();
     }
 }

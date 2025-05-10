@@ -80,7 +80,7 @@ public interface INetwork
     /// <returns>A task that represents the asynchronous operation.</returns>
     [RequiresUnreferencedCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported")]
     [RequiresDynamicCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported.")]
-    Task StartMonitoring();
+    Task StartMonitoringAsync();
 
     /// <summary>
     /// Asynchronously stops monitoring for network traffic.
@@ -88,5 +88,5 @@ public interface INetwork
     /// <returns>A task that represents the asynchronous operation.</returns>
     [RequiresUnreferencedCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported")]
     [RequiresDynamicCode("Network monitoring is currently implemented with CDP. When it is implemented with BiDi, AOT will be supported.")]
-    Task StopMonitoring();
+    Task StopMonitoringAsync();
 }

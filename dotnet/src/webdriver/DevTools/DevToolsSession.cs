@@ -151,7 +151,7 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
     /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="command"/> is <see langword="null"/>.</exception>
-    public async Task<ICommandResponse<TCommand>?> SendCommand<TCommand>(TCommand command, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
+    public async Task<ICommandResponse<TCommand>?> SendCommandAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
         where TCommand : ICommand
     {
         if (command == null)
@@ -160,7 +160,7 @@ public class DevToolsSession : IDevToolsSession
         }
 
         JsonNode commandParameters = JsonSerializer.SerializeToNode(command) ?? throw new InvalidOperationException("Command serialized to \"null\".");
-        var result = await SendCommand(command.CommandName, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+        var result = await SendCommandAsync(command.CommandName, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -185,7 +185,7 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="millisecondsTimeout">The execution timeout of the command in milliseconds.</param>
     /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
     /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
-    public async Task<ICommandResponse<TCommand>?> SendCommand<TCommand>(TCommand command, string sessionId, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
+    public async Task<ICommandResponse<TCommand>?> SendCommandAsync<TCommand>(TCommand command, string sessionId, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
         where TCommand : ICommand
     {
         if (command == null)
@@ -194,7 +194,7 @@ public class DevToolsSession : IDevToolsSession
         }
 
         JsonNode commandParameters = JsonSerializer.SerializeToNode(command) ?? throw new InvalidOperationException("Command serialized to \"null\".");
-        var result = await SendCommand(command.CommandName, sessionId, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+        var result = await SendCommandAsync(command.CommandName, sessionId, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -220,7 +220,7 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
     /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="command"/> is <see langword="null"/>.</exception>
-    public async Task<TCommandResponse?> SendCommand<TCommand, TCommandResponse>(TCommand command, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
+    public async Task<TCommandResponse?> SendCommandAsync<TCommand, TCommandResponse>(TCommand command, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
         where TCommand : ICommand
         where TCommandResponse : ICommandResponse<TCommand>
     {
@@ -230,7 +230,7 @@ public class DevToolsSession : IDevToolsSession
         }
 
         JsonNode commandParameters = JsonSerializer.SerializeToNode(command) ?? throw new InvalidOperationException("Command serialized to \"null\".");
-        var result = await SendCommand(command.CommandName, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
+        var result = await SendCommandAsync(command.CommandName, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived).ConfigureAwait(false);
 
         if (result == null)
         {
@@ -250,15 +250,15 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
     /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="commandName"/> is <see langword="null"/>.</exception>
-    public async Task<JsonElement?> SendCommand(string commandName, JsonNode commandParameters, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
+    public async Task<JsonElement?> SendCommandAsync(string commandName, JsonNode commandParameters, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
     {
         if (this.attachedTargetId == null)
         {
             LogTrace("Session not currently attached to a target; reattaching");
-            await this.InitializeSession().ConfigureAwait(false);
+            await this.InitializeSessionAsync().ConfigureAwait(false);
         }
 
-        return await SendCommand(commandName, this.ActiveSessionId, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived);
+        return await SendCommandAsync(commandName, this.ActiveSessionId, commandParameters, cancellationToken, millisecondsTimeout, throwExceptionIfResponseNotReceived);
     }
 
     /// <summary>
@@ -272,7 +272,7 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="throwExceptionIfResponseNotReceived"><see langword="true"/> to throw an exception if a response is not received; otherwise, <see langword="false"/>.</param>
     /// <returns>The command response object implementing the <see cref="ICommandResponse{T}"/> interface.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="commandName"/> is <see langword="null"/>.</exception>
-    public async Task<JsonElement?> SendCommand(string commandName, string? sessionId, JsonNode commandParameters, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
+    public async Task<JsonElement?> SendCommandAsync(string commandName, string? sessionId, JsonNode commandParameters, CancellationToken cancellationToken = default, int? millisecondsTimeout = null, bool throwExceptionIfResponseNotReceived = true)
     {
         millisecondsTimeout ??= Convert.ToInt32(CommandTimeout.TotalMilliseconds);
 
@@ -289,7 +289,7 @@ public class DevToolsSession : IDevToolsSession
 
             string contents = JsonSerializer.Serialize(message);
             this.pendingCommands.TryAdd(message.CommandId, message);
-            await this.connection.SendData(contents).ConfigureAwait(false);
+            await this.connection.SendDataAsync(contents).ConfigureAwait(false);
 
             var responseWasReceived = message.SyncEvent.Wait(millisecondsTimeout.Value, cancellationToken);
 
@@ -342,19 +342,19 @@ public class DevToolsSession : IDevToolsSession
     /// Asynchronously starts the session.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    internal async Task StartSession()
+    internal async Task StartSessionAsync()
     {
         int requestedProtocolVersion = options.ProtocolVersion ?? AutoDetectDevToolsProtocolVersion;
-        int protocolVersion = await InitializeProtocol(requestedProtocolVersion).ConfigureAwait(false);
+        int protocolVersion = await InitializeProtocolAsync(requestedProtocolVersion).ConfigureAwait(false);
         this.Domains = DevToolsDomains.InitializeDomains(protocolVersion, this);
 
-        await this.InitializeSocketConnection().ConfigureAwait(false);
-        await this.InitializeSession().ConfigureAwait(false);
+        await this.InitializeSocketConnectionAsync().ConfigureAwait(false);
+        await this.InitializeSessionAsync().ConfigureAwait(false);
         try
         {
             // Wrap this in a try-catch, because it's not the end of the
             // world if clearing the log doesn't work.
-            await this.Domains.Log.Clear().ConfigureAwait(false);
+            await this.Domains.Log.ClearAsync().ConfigureAwait(false);
             LogTrace("Log cleared.", this.attachedTargetId);
         }
         catch (WebDriverException)
@@ -368,7 +368,7 @@ public class DevToolsSession : IDevToolsSession
     /// <param name="manualDetach"><see langword="true"/> to manually detach the session
     /// from its attached target; otherwise <see langword="false"/>.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    internal async Task StopSession(bool manualDetach)
+    internal async Task StopSessionAsync(bool manualDetach)
     {
         if (this.attachedTargetId != null)
         {
@@ -377,7 +377,7 @@ public class DevToolsSession : IDevToolsSession
             this.ActiveSessionId = null;
             if (manualDetach)
             {
-                await this.Domains.Target.DetachFromTarget(sessionId, this.attachedTargetId).ConfigureAwait(false);
+                await this.Domains.Target.DetachFromTargetAsync(sessionId, this.attachedTargetId).ConfigureAwait(false);
             }
 
             this.attachedTargetId = null;
@@ -396,14 +396,14 @@ public class DevToolsSession : IDevToolsSession
             {
                 this.Domains.Target.TargetDetached -= this.OnTargetDetached;
                 this.pendingCommands.Clear();
-                Task.Run(async () => await this.TerminateSocketConnection()).GetAwaiter().GetResult();
+                Task.Run(async () => await this.TerminateSocketConnectionAsync()).GetAwaiter().GetResult();
             }
 
             this.isDisposed = true;
         }
     }
 
-    private async Task<int> InitializeProtocol(int requestedProtocolVersion)
+    private async Task<int> InitializeProtocolAsync(int requestedProtocolVersion)
     {
         int protocolVersion = requestedProtocolVersion;
         if (this.EndpointAddress == null)
@@ -438,7 +438,7 @@ public class DevToolsSession : IDevToolsSession
         return protocolVersion;
     }
 
-    private async Task InitializeSession()
+    private async Task InitializeSessionAsync()
     {
         LogTrace("Creating session");
         if (this.attachedTargetId == null)
@@ -448,7 +448,7 @@ public class DevToolsSession : IDevToolsSession
             // that when getting the available targets, we won't
             // recursively try to call InitializeSession.
             this.attachedTargetId = "";
-            var targets = await this.Domains.Target.GetTargets().ConfigureAwait(false);
+            var targets = await this.Domains.Target.GetTargetsAsync().ConfigureAwait(false);
             foreach (var target in targets)
             {
                 if (target.Type == "page")
@@ -466,11 +466,11 @@ public class DevToolsSession : IDevToolsSession
             throw new WebDriverException("Unable to find target to attach to, no targets of type 'page' available");
         }
 
-        string sessionId = await this.Domains.Target.AttachToTarget(this.attachedTargetId).ConfigureAwait(false);
+        string sessionId = await this.Domains.Target.AttachToTargetAsync(this.attachedTargetId).ConfigureAwait(false);
         LogTrace("Target ID {0} attached. Active session ID: {1}", this.attachedTargetId, sessionId);
         this.ActiveSessionId = sessionId;
 
-        await this.Domains.Target.SetAutoAttach().ConfigureAwait(false);
+        await this.Domains.Target.SetAutoAttachAsync().ConfigureAwait(false);
         LogTrace("AutoAttach is set.", this.attachedTargetId);
 
         // The Target domain needs to send Session-less commands! Else the waitForDebugger setting in setAutoAttach wont work!
@@ -479,8 +479,8 @@ public class DevToolsSession : IDevToolsSession
             var setAutoAttachCommand = Domains.Target.CreateSetAutoAttachCommand(true);
             var setDiscoverTargetsCommand = Domains.Target.CreateDiscoverTargetsCommand();
 
-            await SendCommand(setAutoAttachCommand, string.Empty, default, null, true).ConfigureAwait(false);
-            await SendCommand(setDiscoverTargetsCommand, string.Empty, default, null, true).ConfigureAwait(false);
+            await SendCommandAsync(setAutoAttachCommand, string.Empty, default, null, true).ConfigureAwait(false);
+            await SendCommandAsync(setDiscoverTargetsCommand, string.Empty, default, null, true).ConfigureAwait(false);
         }
 
         this.Domains.Target.TargetDetached += this.OnTargetDetached;
@@ -490,31 +490,31 @@ public class DevToolsSession : IDevToolsSession
     {
         if (e.SessionId == this.ActiveSessionId && e.TargetId == this.attachedTargetId)
         {
-            Task.Run(async () => await this.StopSession(false)).GetAwaiter().GetResult();
+            Task.Run(async () => await this.StopSessionAsync(false)).GetAwaiter().GetResult();
         }
     }
 
-    private async Task InitializeSocketConnection()
+    private async Task InitializeSocketConnectionAsync()
     {
         LogTrace("Creating WebSocket");
         this.connection = new WebSocketConnection(this.openConnectionWaitTimeSpan, this.closeConnectionWaitTimeSpan);
         connection.DataReceived += OnConnectionDataReceived;
-        await connection.Start(this.EndpointAddress!).ConfigureAwait(false);
+        await connection.StartAsync(this.EndpointAddress!).ConfigureAwait(false);
         LogTrace("WebSocket created");
     }
 
-    private async Task TerminateSocketConnection()
+    private async Task TerminateSocketConnectionAsync()
     {
         LogTrace("Closing WebSocket");
         if (this.connection != null && this.connection.IsActive)
         {
-            await this.connection.Stop().ConfigureAwait(false);
-            await this.ShutdownMessageQueue(this.connection).ConfigureAwait(false);
+            await this.connection.StopAsync().ConfigureAwait(false);
+            await this.ShutdownMessageQueueAsync(this.connection).ConfigureAwait(false);
         }
         LogTrace("WebSocket closed");
     }
 
-    private async Task ShutdownMessageQueue(WebSocketConnection connection)
+    private async Task ShutdownMessageQueueAsync(WebSocketConnection connection)
     {
         // THe WebSocket connection is always closed before this method
         // is called, so there will eventually be no more data written

@@ -34,9 +34,9 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task EnableAndDisablePerformance()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.Enable(new CurrentCdpVersion.Performance.EnableCommandSettings());
+        await domains.Performance.EnableAsync(new CurrentCdpVersion.Performance.EnableCommandSettings());
         driver.Url = simpleTestPage;
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 
     [Test]
@@ -46,9 +46,9 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task DisablePerformance()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
         driver.Url = simpleTestPage;
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 
     [Test]
@@ -58,14 +58,14 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task SetTimeDomainTimeTickPerformance()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.Disable();
-        await domains.Performance.SetTimeDomain(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
+        await domains.Performance.DisableAsync();
+        await domains.Performance.SetTimeDomainAsync(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
         {
             TimeDomain = "timeTicks"
         });
-        await domains.Performance.Enable(new CurrentCdpVersion.Performance.EnableCommandSettings());
+        await domains.Performance.EnableAsync(new CurrentCdpVersion.Performance.EnableCommandSettings());
         driver.Url = simpleTestPage;
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 
     [Test]
@@ -76,14 +76,14 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task SetTimeDomainsThreadTicksPerformance()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.Disable();
-        await domains.Performance.SetTimeDomain(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
+        await domains.Performance.DisableAsync();
+        await domains.Performance.SetTimeDomainAsync(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
         {
             TimeDomain = "threadTicks"
         });
-        await domains.Performance.Enable(new CurrentCdpVersion.Performance.EnableCommandSettings());
+        await domains.Performance.EnableAsync(new CurrentCdpVersion.Performance.EnableCommandSettings());
         driver.Url = simpleTestPage;
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 
     [Test]
@@ -93,17 +93,17 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task GetMetricsByTimeTicks()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.SetTimeDomain(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
+        await domains.Performance.SetTimeDomainAsync(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
         {
             TimeDomain = "timeTicks"
         });
-        await domains.Performance.Enable(new CurrentCdpVersion.Performance.EnableCommandSettings());
+        await domains.Performance.EnableAsync(new CurrentCdpVersion.Performance.EnableCommandSettings());
         driver.Url = simpleTestPage;
-        var response = await domains.Performance.GetMetrics();
+        var response = await domains.Performance.GetMetricsAsync();
         var metrics = response.Metrics;
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics.Length, Is.GreaterThan(0));
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 
     [Test]
@@ -114,16 +114,16 @@ public class DevToolsPerformanceTest : DevToolsTestFixture
     public async Task GetMetricsByThreadTicks()
     {
         var domains = session.GetVersionSpecificDomains<CurrentCdpVersion.DevToolsSessionDomains>();
-        await domains.Performance.SetTimeDomain(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
+        await domains.Performance.SetTimeDomainAsync(new CurrentCdpVersion.Performance.SetTimeDomainCommandSettings()
         {
             TimeDomain = "threadTicks"
         });
-        await domains.Performance.Enable(new CurrentCdpVersion.Performance.EnableCommandSettings());
+        await domains.Performance.EnableAsync(new CurrentCdpVersion.Performance.EnableCommandSettings());
         driver.Url = simpleTestPage;
-        var response = await domains.Performance.GetMetrics();
+        var response = await domains.Performance.GetMetricsAsync();
         var metrics = response.Metrics;
         Assert.That(metrics, Is.Not.Null);
         Assert.That(metrics.Length, Is.GreaterThan(0));
-        await domains.Performance.Disable();
+        await domains.Performance.DisableAsync();
     }
 }

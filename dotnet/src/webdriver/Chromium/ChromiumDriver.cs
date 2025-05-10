@@ -333,7 +333,7 @@ public class ChromiumDriver : WebDriver, ISupportsLogs, IDevTools
             try
             {
                 DevToolsSession session = new DevToolsSession(debuggerAddress?.ToString()!, options);
-                Task.Run(async () => await session.StartSession()).GetAwaiter().GetResult();
+                Task.Run(async () => await session.StartSessionAsync()).GetAwaiter().GetResult();
                 this.devToolsSession = session;
             }
             catch (Exception e)
@@ -367,7 +367,7 @@ public class ChromiumDriver : WebDriver, ISupportsLogs, IDevTools
     {
         if (this.devToolsSession != null)
         {
-            Task.Run(async () => await this.devToolsSession.StopSession(manualDetach: true)).GetAwaiter().GetResult();
+            Task.Run(async () => await this.devToolsSession.StopSessionAsync(manualDetach: true)).GetAwaiter().GetResult();
         }
     }
 

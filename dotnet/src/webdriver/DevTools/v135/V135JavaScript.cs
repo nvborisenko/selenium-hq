@@ -52,36 +52,36 @@ public class V135JavaScript : JavaScript
     /// Asynchronously enables the Runtime domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task EnableRuntime()
+    public override async Task EnableRuntimeAsync()
     {
-        await runtime.Enable().ConfigureAwait(false);
+        await runtime.EnableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously disables the Runtime domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task DisableRuntime()
+    public override async Task DisableRuntimeAsync()
     {
-        await runtime.Disable().ConfigureAwait(false);
+        await runtime.DisableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously enables the Page domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task EnablePage()
+    public override async Task EnablePageAsync()
     {
-        await page.Enable(new Page.EnableCommandSettings()).ConfigureAwait(false);
+        await page.EnableAsync(new Page.EnableCommandSettings()).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Asynchronously disables the Page domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task DisablePage()
+    public override async Task DisablePageAsync()
     {
-        await page.Disable().ConfigureAwait(false);
+        await page.DisableAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -89,9 +89,9 @@ public class V135JavaScript : JavaScript
     /// </summary>
     /// <param name="name">The name to which to bind to.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task AddBinding(string name)
+    public override async Task AddBindingAsync(string name)
     {
-        await runtime.AddBinding(new AddBindingCommandSettings() { Name = name }).ConfigureAwait(false);
+        await runtime.AddBindingAsync(new AddBindingCommandSettings() { Name = name }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -99,9 +99,9 @@ public class V135JavaScript : JavaScript
     /// </summary>
     /// <param name="name">The name to which to remove the bind from.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task RemoveBinding(string name)
+    public override async Task RemoveBindingAsync(string name)
     {
-        await runtime.RemoveBinding(new RemoveBindingCommandSettings() { Name = name }).ConfigureAwait(false);
+        await runtime.RemoveBindingAsync(new RemoveBindingCommandSettings() { Name = name }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -109,9 +109,9 @@ public class V135JavaScript : JavaScript
     /// </summary>
     /// <param name="script">The script to add to be evaluated when a new document is opened.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the internal ID of the script.</returns>
-    public override async Task<string> AddScriptToEvaluateOnNewDocument(string script)
+    public override async Task<string> AddScriptToEvaluateOnNewDocumentAsync(string script)
     {
-        var result = await page.AddScriptToEvaluateOnNewDocument(new AddScriptToEvaluateOnNewDocumentCommandSettings() { Source = script }).ConfigureAwait(false);
+        var result = await page.AddScriptToEvaluateOnNewDocumentAsync(new AddScriptToEvaluateOnNewDocumentCommandSettings() { Source = script }).ConfigureAwait(false);
         return result.Identifier;
     }
 
@@ -120,9 +120,9 @@ public class V135JavaScript : JavaScript
     /// </summary>
     /// <param name="scriptId">The ID of the script to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public override async Task RemoveScriptToEvaluateOnNewDocument(string scriptId)
+    public override async Task RemoveScriptToEvaluateOnNewDocumentAsync(string scriptId)
     {
-        await page.RemoveScriptToEvaluateOnNewDocument(new RemoveScriptToEvaluateOnNewDocumentCommandSettings() { Identifier = scriptId }).ConfigureAwait(false);
+        await page.RemoveScriptToEvaluateOnNewDocumentAsync(new RemoveScriptToEvaluateOnNewDocumentCommandSettings() { Identifier = scriptId }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -134,9 +134,9 @@ public class V135JavaScript : JavaScript
     /// This method is internal to the operation of pinned scripts in Selenium, and
     /// is therefore internal by design.
     /// </remarks>
-    internal override async Task Evaluate(string script)
+    internal override async Task EvaluateAsync(string script)
     {
-        await runtime.Evaluate(new EvaluateCommandSettings { Expression = script }).ConfigureAwait(false);
+        await runtime.EvaluateAsync(new EvaluateCommandSettings { Expression = script }).ConfigureAwait(false);
     }
 
     private void OnRuntimeBindingCalled(object? sender, Runtime.BindingCalledEventArgs e)

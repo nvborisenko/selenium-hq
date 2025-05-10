@@ -53,10 +53,10 @@ public class NetworkInterceptionTests : DriverTestFixture
                 return responseData;
             };
             network.AddResponseHandler(handler);
-            await network.StartMonitoring();
+            await network.StartMonitoringAsync();
             driver.Url = simpleTestPage;
             string text = driver.FindElement(By.CssSelector("p")).Text;
-            await network.StopMonitoring();
+            await network.StopMonitoringAsync();
             Assert.That(text, Is.EqualTo("I intercepted you"));
         }
     }
@@ -74,10 +74,10 @@ public class NetworkInterceptionTests : DriverTestFixture
                 Credentials = new PasswordCredentials("test", "test")
             };
             network.AddAuthenticationHandler(handler);
-            await network.StartMonitoring();
+            await network.StartMonitoringAsync();
             driver.Url = authenticationPage;
             string text = driver.FindElement(By.CssSelector("h1")).Text;
-            await network.StopMonitoring();
+            await network.StopMonitoringAsync();
             Assert.That(text, Is.EqualTo("authorized"));
         }
     }
@@ -99,10 +99,10 @@ public class NetworkInterceptionTests : DriverTestFixture
             };
             INetwork networkInterceptor = driver.Manage().Network;
             networkInterceptor.AddResponseHandler(handler);
-            await networkInterceptor.StartMonitoring();
+            await networkInterceptor.StartMonitoringAsync();
 
             driver.Navigate().GoToUrl("https://www.selenium.dev");
-            await networkInterceptor.StopMonitoring();
+            await networkInterceptor.StopMonitoringAsync();
 
             var body = driver.FindElement(By.TagName("body"));
             Assert.AreEqual("Creamy, delicious cheese!", body.Text);

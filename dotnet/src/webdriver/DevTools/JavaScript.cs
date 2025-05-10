@@ -46,53 +46,53 @@ public abstract class JavaScript
     /// Asynchronously enables the Runtime domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task EnableRuntime();
+    public abstract Task EnableRuntimeAsync();
 
     /// <summary>
     /// Asynchronously disables the Runtime domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task DisableRuntime();
+    public abstract Task DisableRuntimeAsync();
 
     /// <summary>
     /// Asynchronously enables the Page domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task EnablePage();
+    public abstract Task EnablePageAsync();
 
     /// <summary>
     /// Asynchronously disables the Page domain in the DevTools Protocol.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task DisablePage();
+    public abstract Task DisablePageAsync();
 
     /// <summary>
     /// Adds a binding to a specific JavaScript name.
     /// </summary>
     /// <param name="name">The name to which to bind to.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task AddBinding(string name);
+    public abstract Task AddBindingAsync(string name);
 
     /// <summary>
     /// Removes a binding from a specific JavaScript name.
     /// </summary>
     /// <param name="name">The name to which to remove the bind from.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task RemoveBinding(string name);
+    public abstract Task RemoveBindingAsync(string name);
 
     /// <summary>
     /// Adds a JavaScript snippet to evaluate when a new document is opened.
     /// </summary>
     /// <param name="script">The script to add to be evaluated when a new document is opened.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the internal ID of the script.</returns>
-    public abstract Task<string> AddScriptToEvaluateOnNewDocument(string script);
+    public abstract Task<string> AddScriptToEvaluateOnNewDocumentAsync(string script);
 
     /// <summary>
     /// Removes a JavaScript snippet from evaluate when a new document is opened.
     /// </summary>
     /// <param name="scriptId">The ID of the script to be removed.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public abstract Task RemoveScriptToEvaluateOnNewDocument(string scriptId);
+    public abstract Task RemoveScriptToEvaluateOnNewDocumentAsync(string scriptId);
 
     /// <summary>
     /// Evaluates a JavaScript snippet. It does not return a value.
@@ -103,7 +103,7 @@ public abstract class JavaScript
     /// This method is internal to the operation of pinned scripts in Selenium, and
     /// is therefore internal by design.
     /// </remarks>
-    internal abstract Task Evaluate(string script);
+    internal abstract Task EvaluateAsync(string script);
 
     /// <summary>
     /// Raises the BindingCalled event.

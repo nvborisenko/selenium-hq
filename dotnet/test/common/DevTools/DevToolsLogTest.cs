@@ -46,7 +46,7 @@ public class DevToolsLogTest : DevToolsTestFixture
             sync.Set();
         };
 
-        await domains.Log.Enable();
+        await domains.Log.EnableAsync();
         domains.Log.EntryAdded += entryAddedHandler;
 
         driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIsSecure("notValidPath");
@@ -54,7 +54,7 @@ public class DevToolsLogTest : DevToolsTestFixture
 
         domains.Log.EntryAdded -= entryAddedHandler;
 
-        await domains.Log.Clear();
-        await domains.Log.Disable();
+        await domains.Log.ClearAsync();
+        await domains.Log.DisableAsync();
     }
 }

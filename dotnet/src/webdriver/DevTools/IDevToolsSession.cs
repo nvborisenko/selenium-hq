@@ -64,7 +64,7 @@ public interface IDevToolsSession : IDisposable
     /// <exception cref="ArgumentNullException">If <paramref name="command"/> is <see langword="null"/>.</exception>
     [RequiresUnreferencedCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
     [RequiresDynamicCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
-    Task<ICommandResponse<TCommand>?> SendCommand<TCommand>(TCommand command, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived)
+    Task<ICommandResponse<TCommand>?> SendCommandAsync<TCommand>(TCommand command, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived)
         where TCommand : ICommand;
 
     /// <summary>
@@ -80,7 +80,7 @@ public interface IDevToolsSession : IDisposable
     /// <exception cref="ArgumentNullException">If <paramref name="command"/> is <see langword="null"/>.</exception>
     [RequiresUnreferencedCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
     [RequiresDynamicCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
-    Task<TCommandResponse?> SendCommand<TCommand, TCommandResponse>(TCommand command, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived)
+    Task<TCommandResponse?> SendCommandAsync<TCommand, TCommandResponse>(TCommand command, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived)
         where TCommand : ICommand
         where TCommandResponse : ICommandResponse<TCommand>;
 
@@ -96,5 +96,5 @@ public interface IDevToolsSession : IDisposable
     /// <exception cref="ArgumentNullException">If <paramref name="commandName"/> is <see langword="null"/>.</exception>
     [RequiresUnreferencedCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
     [RequiresDynamicCode(DevToolsSession.CDP_AOTIncompatibilityMessage)]
-    Task<JsonElement?> SendCommand(string commandName, JsonNode @params, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived);
+    Task<JsonElement?> SendCommandAsync(string commandName, JsonNode @params, CancellationToken cancellationToken, int? millisecondsTimeout, bool throwExceptionIfResponseNotReceived);
 }
