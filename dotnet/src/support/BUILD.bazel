@@ -34,6 +34,7 @@ csharp_library(
         "UI/*.cs",
     ]) + [":assembly-info"],
     out = "WebDriver.Support",
+    keyfile = "//dotnet:WebDriver.snk",
     langversion = "12.0",
     nullable = "enable",
     target_frameworks = [
@@ -57,46 +58,6 @@ nuget_pack(
         ":support": "WebDriver.Support",
     },
     nuspec_template = "WebDriver.Support.nuspec",
-    tags = [
-        "block-network",
-    ],
-    version = SE_VERSION,
-    visibility = ["//visibility:public"],
-)
-
-csharp_library(
-    name = "support-strongnamed",
-    srcs = glob([
-        "*.cs",
-        "Events/*.cs",
-        "Extensions/*.cs",
-        "UI/*.cs",
-    ]) + [":assembly-info"],
-    out = "WebDriver.Support.StrongNamed",
-    keyfile = "//dotnet:WebDriver.snk",
-    langversion = "12.0",
-    nullable = "enable",
-    target_frameworks = [
-        "netstandard2.0",
-    ],
-    visibility = [
-        "//dotnet:__subpackages__",
-    ],
-    deps = [
-        "//dotnet/src/webdriver:webdriver-netstandard2.0-strongnamed",
-    ],
-)
-
-nuget_pack(
-    name = "support-strongnamed-pack",
-    files = {
-        "//common/images:selenium_logo_small.png": "icon.png",
-    },
-    id = "Selenium.Support.StrongNamed",
-    libs = {
-        ":support-strongnamed": "WebDriver.Support.StrongNamed",
-    },
-    nuspec_template = "WebDriver.Support.StrongNamed.nuspec",
     tags = [
         "block-network",
     ],

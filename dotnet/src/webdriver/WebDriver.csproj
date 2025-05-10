@@ -6,6 +6,9 @@
     <RootNamespace>OpenQA.Selenium</RootNamespace>
     <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
+
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\WebDriver.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -49,7 +52,7 @@
   </PropertyGroup>-->
 
   <ItemGroup>
-    <InternalsVisibleTo Include="WebDriver.Common.Tests" />
+    <InternalsVisibleTo Include="WebDriver.Common.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010077635129081a3f66260c53ba6fa2460b787b80df0e05461824c058c078eca7f7659653328e629bb110ac3904b1af0157898f0171043dc33d0e1001b559cce290a8db2a4037e3ee815c809e81ff55a462680b9f0c2424f2c04c400e820853e451cbde46136bb1de7517c3fbeff1d1f806547407349ae538377601c2384d83049b" />
   </ItemGroup>
 
   <ItemGroup>

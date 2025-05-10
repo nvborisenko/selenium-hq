@@ -7,6 +7,9 @@
     <BuildSystem>visual-studio</BuildSystem>
     <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
+
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\WebDriver.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>

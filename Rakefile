@@ -839,8 +839,6 @@ namespace :dotnet do
 
     FileUtils.copy('bazel-bin/dotnet/release.zip', "build/dist/selenium-dotnet-#{dotnet_version}.zip")
     FileUtils.chmod(0o666, "build/dist/selenium-dotnet-#{dotnet_version}.zip")
-    FileUtils.copy('bazel-bin/dotnet/strongnamed.zip', "build/dist/selenium-dotnet-strongnamed-#{dotnet_version}.zip")
-    FileUtils.chmod(0o666, "build/dist/selenium-dotnet-strongnamed-#{dotnet_version}.zip")
   end
 
   desc 'Upload nupkg files to Nuget'

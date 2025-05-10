@@ -33,8 +33,9 @@ csharp_library(
         "**/*.cs",
     ]) + devtools_version_targets(),
     out = "WebDriver",
+    keyfile = "//dotnet:WebDriver.snk",
     internals_visible_to = [
-        "WebDriver.Common.Tests",
+        "WebDriver.Common.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010077635129081a3f66260c53ba6fa2460b787b80df0e05461824c058c078eca7f7659653328e629bb110ac3904b1af0157898f0171043dc33d0e1001b559cce290a8db2a4037e3ee815c809e81ff55a462680b9f0c2424f2c04c400e820853e451cbde46136bb1de7517c3fbeff1d1f806547407349ae538377601c2384d83049b",
     ],
     langversion = "12.0",
     nullable = "enable",
@@ -70,78 +71,13 @@ csharp_library(
         "**/*.cs",
     ]) + devtools_version_targets(),
     out = "WebDriver",
+    keyfile = "//dotnet:WebDriver.snk",
     defines = [
         "NET8_0_OR_GREATER",
     ],
     internals_visible_to = [
-        "WebDriver.Common.Tests",
+        "WebDriver.Common.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010077635129081a3f66260c53ba6fa2460b787b80df0e05461824c058c078eca7f7659653328e629bb110ac3904b1af0157898f0171043dc33d0e1001b559cce290a8db2a4037e3ee815c809e81ff55a462680b9f0c2424f2c04c400e820853e451cbde46136bb1de7517c3fbeff1d1f806547407349ae538377601c2384d83049b",
     ],
-    langversion = "12.0",
-    nullable = "enable",
-    resources = [
-        "//javascript/atoms/fragments:find-elements.js",
-        "//javascript/atoms/fragments:is-displayed.js",
-        "//javascript/cdp-support:mutation-listener.js",
-        "//javascript/webdriver/atoms:get-attribute.js",
-        "//third_party/js/selenium:webdriver_json",
-    ],
-    target_frameworks = [
-        "net8.0",
-    ],
-    visibility = [
-        "//dotnet:__subpackages__",
-    ],
-    deps = [
-    ],
-)
-
-csharp_library(
-    name = "webdriver-netstandard2.0-strongnamed",
-    srcs = [
-        ":assembly-info",
-    ] + glob([
-        "**/*.cs",
-    ]) + devtools_version_targets(),
-    out = "WebDriver.StrongNamed",
-    keyfile = "//dotnet:WebDriver.snk",
-    langversion = "12.0",
-    nullable = "enable",
-    resources = [
-        "//javascript/atoms/fragments:find-elements.js",
-        "//javascript/atoms/fragments:is-displayed.js",
-        "//javascript/cdp-support:mutation-listener.js",
-        "//javascript/webdriver/atoms:get-attribute.js",
-        "//third_party/js/selenium:webdriver_json",
-    ],
-    target_frameworks = [
-        "netstandard2.0",
-    ],
-    visibility = [
-        "//dotnet:__subpackages__",
-    ],
-    deps = [
-        framework("nuget", "NETStandard.Library"),
-        framework("nuget", "Microsoft.Bcl.AsyncInterfaces"),
-        framework("nuget", "System.Threading.Tasks.Extensions"),
-        framework("nuget", "System.Memory"),
-        framework("nuget", "System.Runtime.CompilerServices.Unsafe"),
-        framework("nuget", "System.Text.Encodings.Web"),
-        framework("nuget", "System.Text.Json"),
-    ],
-)
-
-csharp_library(
-    name = "webdriver-net8.0-strongnamed",
-    srcs = [
-        ":assembly-info",
-    ] + glob([
-        "**/*.cs",
-    ]) + devtools_version_targets(),
-    out = "WebDriver.StrongNamed",
-    defines = [
-        "NET8_0_OR_GREATER",
-    ],
-    keyfile = "//dotnet:WebDriver.snk",
     langversion = "12.0",
     nullable = "enable",
     resources = [
@@ -217,36 +153,6 @@ nuget_pack(
         ":webdriver-netstandard2.0": "WebDriver",
     },
     nuspec_template = "WebDriver.nuspec",
-    tags = [
-        "block-network",
-    ],
-    version = SE_VERSION,
-    visibility = [
-        "//dotnet:__subpackages__",
-    ],
-)
-
-nuget_pack(
-    name = "webdriver-strongnamed-pack",
-    files = {
-        "//common/images:selenium_logo_small.png": "icon.png",
-        "//common/manager:selenium-manager-linux": "manager/linux/selenium-manager",
-        "//common/manager:selenium-manager-macos": "manager/macos/selenium-manager",
-        "//common/manager:selenium-manager-windows": "manager/windows/selenium-manager.exe",
-        ":readme": "README.md",
-        ":props": "build/Selenium.WebDriver.StrongNamed.targets",
-        ":transitive-props": "buildTransitive/Selenium.WebDriver.StrongNamed.targets",
-    },
-    id = "Selenium.WebDriver.StrongNamed",
-    libs = {
-        ":webdriver-net8.0-strongnamed": "WebDriver.StrongNamed",
-        ":webdriver-netstandard2.0-strongnamed": "WebDriver.StrongNamed",
-    },
-    nuspec_template = "WebDriver.StrongNamed.nuspec",
-    property_group_vars = {
-        "BaseImagePath": "images",
-        "BaseSeleniumManagerPath": "manager",
-    },
     tags = [
         "block-network",
     ],
