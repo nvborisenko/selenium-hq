@@ -56,10 +56,7 @@ internal sealed class OptionsManager : IOptions
     /// Provides access to the timeouts defined for this driver.
     /// </summary>
     /// <returns>An object implementing the <see cref="ITimeouts"/> interface.</returns>
-    public ITimeouts Timeouts()
-    {
-        return new Timeouts(this.driver);
-    }
+    public ITimeouts Timeouts => new Timeouts(this.driver);
 
     public INetwork Network => this.driver.Network;
 }

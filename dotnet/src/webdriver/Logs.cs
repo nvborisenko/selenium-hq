@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace OpenQA.Selenium;
 
@@ -43,29 +42,26 @@ public class Logs : ILogs
     /// <summary>
     /// Gets the list of available log types for this driver.
     /// </summary>
-    public ReadOnlyCollection<string> AvailableLogTypes
+    public IReadOnlyList<string> GetAvailableLogTypes()
     {
-        get
+        List<string> availableLogTypes = new List<string>();
+        try
         {
-            List<string> availableLogTypes = new List<string>();
-            try
+            Response commandResponse = this.driver.Execute(DriverCommand.GetAvailableLogTypes, null);
+            if (commandResponse.Value is object[] responseValue)
             {
-                Response commandResponse = this.driver.Execute(DriverCommand.GetAvailableLogTypes, null);
-                if (commandResponse.Value is object[] responseValue)
+                foreach (object logKind in responseValue)
                 {
-                    foreach (object logKind in responseValue)
-                    {
-                        availableLogTypes.Add(logKind.ToString()!);
-                    }
+                    availableLogTypes.Add(logKind.ToString()!);
                 }
             }
-            catch (NotImplementedException)
-            {
-                // Swallow for backwards compatibility
-            }
-
-            return availableLogTypes.AsReadOnly();
         }
+        catch (NotImplementedException)
+        {
+            // Swallow for backwards compatibility
+        }
+
+        return availableLogTypes.AsReadOnly();
     }
 
     /// <summary>
@@ -75,7 +71,7 @@ public class Logs : ILogs
     /// Log types can be found in the <see cref="LogType"/> class.</param>
     /// <returns>The list of <see cref="LogEntry"/> objects for the specified log.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="logKind"/> is <see langword="null"/>.</exception>
-    public ReadOnlyCollection<LogEntry> GetLog(string logKind)
+    public IReadOnlyList<LogEntry> GetLog(string logKind)
     {
         if (logKind is null)
         {

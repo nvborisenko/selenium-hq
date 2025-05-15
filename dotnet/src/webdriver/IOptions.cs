@@ -50,5 +50,5 @@ public interface IOptions
     /// Provides access to the timeouts defined for this driver.
     /// </summary>
     /// <returns>An object implementing the <see cref="ITimeouts"/> interface.</returns>
-    ITimeouts Timeouts();
+    ITimeouts Timeouts { get; }
 }

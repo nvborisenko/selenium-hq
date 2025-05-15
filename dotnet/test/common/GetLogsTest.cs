@@ -21,6 +21,7 @@ using NUnit.Framework;
 using OpenQA.Selenium.Chrome;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace OpenQA.Selenium;
 
@@ -45,14 +46,14 @@ public class GetLogsTest : DriverTestFixture
     //[Test]
     public void LogBufferShouldBeResetAfterEachGetLogCall()
     {
-        ReadOnlyCollection<string> logTypes = driver.Manage().Logs.AvailableLogTypes;
+        var logTypes = driver.Manage().Logs.GetAvailableLogTypes();
         foreach (string logType in logTypes)
         {
             driver.Url = simpleTestPage;
-            ReadOnlyCollection<LogEntry> firstEntries = driver.Manage().Logs.GetLog(logType);
+            var firstEntries = driver.Manage().Logs.GetLog(logType);
             if (firstEntries.Count > 0)
             {
-                ReadOnlyCollection<LogEntry> secondEntries = driver.Manage().Logs.GetLog(logType);
+                var secondEntries = driver.Manage().Logs.GetLog(logType);
                 Assert.That(HasOverlappingLogEntries(firstEntries, secondEntries), Is.False, string.Format("There should be no overlapping log entries in consecutive get log calls for {0} logs", logType));
             }
         }
@@ -62,11 +63,11 @@ public class GetLogsTest : DriverTestFixture
     public void DifferentLogsShouldNotContainTheSameLogEntries()
     {
         driver.Url = simpleTestPage;
-        Dictionary<string, ReadOnlyCollection<LogEntry>> logTypeToEntriesDictionary = new Dictionary<string, ReadOnlyCollection<LogEntry>>();
-        ReadOnlyCollection<string> logTypes = driver.Manage().Logs.AvailableLogTypes;
+        Dictionary<string, List<LogEntry>> logTypeToEntriesDictionary = new Dictionary<string, List<LogEntry>>();
+        var logTypes = driver.Manage().Logs.GetAvailableLogTypes();
         foreach (string logType in logTypes)
         {
-            logTypeToEntriesDictionary.Add(logType, driver.Manage().Logs.GetLog(logType));
+            logTypeToEntriesDictionary.Add(logType, [.. driver.Manage().Logs.GetLog(logType)]);
         }
 
         foreach (string firstLogType in logTypeToEntriesDictionary.Keys)
@@ -84,11 +85,11 @@ public class GetLogsTest : DriverTestFixture
     //[Test]
     public void TurningOffLogShouldMeanNoLogMessages()
     {
-        ReadOnlyCollection<string> logTypes = driver.Manage().Logs.AvailableLogTypes;
+        var logTypes = driver.Manage().Logs.GetAvailableLogTypes();
         foreach (string logType in logTypes)
         {
             CreateWebDriverWithLogging(logType, LogLevel.Off);
-            ReadOnlyCollection<LogEntry> entries = localDriver.Manage().Logs.GetLog(logType);
+            var entries = localDriver.Manage().Logs.GetLog(logType);
             Assert.That(entries, Is.Empty, string.Format("There should be no log entries for log type {0} when logging is turned off.", logType));
             QuitDriver();
         }
@@ -106,7 +107,7 @@ public class GetLogsTest : DriverTestFixture
         localDriver.Url = simpleTestPage;
     }
 
-    private bool HasOverlappingLogEntries(ReadOnlyCollection<LogEntry> firstLog, ReadOnlyCollection<LogEntry> secondLog)
+    private bool HasOverlappingLogEntries(IEnumerable<LogEntry> firstLog, IEnumerable<LogEntry> secondLog)
     {
         foreach (LogEntry firstEntry in firstLog)
         {
