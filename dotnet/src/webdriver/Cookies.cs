@@ -1,4 +1,4 @@
-// <copyright file="CookieJar.cs" company="Selenium Committers">
+// <copyright file="Cookies.cs" company="Selenium Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -23,7 +23,7 @@ using System.Collections.ObjectModel;
 
 namespace OpenQA.Selenium;
 
-internal sealed class CookieJar(WebDriver driver) : ICookieJar
+internal sealed class Cookies(WebDriver driver) : ICookies
 {
     /// <summary>
     /// Gets all cookies defined for the current page.

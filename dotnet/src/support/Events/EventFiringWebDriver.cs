@@ -1022,7 +1022,7 @@ public class EventFiringWebDriver : IWebDriver, IJavaScriptExecutor, ITakesScree
         /// <summary>
         /// Gets an object allowing the user to manipulate cookies on the page.
         /// </summary>
-        public ICookieJar Cookies => this.wrappedOptions.Cookies;
+        public ICookies Cookies => this.wrappedOptions.Cookies;
 
         /// <summary>
         /// Gets an object allowing the user to manipulate the currently-focused browser window.

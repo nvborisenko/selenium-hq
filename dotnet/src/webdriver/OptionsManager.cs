@@ -38,7 +38,7 @@ internal sealed class OptionsManager : IOptions
     /// <summary>
     /// Gets an object allowing the user to manipulate cookies on the page.
     /// </summary>
-    public ICookieJar Cookies => new CookieJar(this.driver);
+    public ICookies Cookies => new Cookies(this.driver);
 
     /// <summary>
     /// Gets an object allowing the user to manipulate the currently-focused browser window.

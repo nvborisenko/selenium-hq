@@ -1,4 +1,4 @@
-// <copyright file="ICookieJar.cs" company="Selenium Committers">
+// <copyright file="ICookies.cs" company="Selenium Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -25,7 +25,7 @@ namespace OpenQA.Selenium;
 /// <summary>
 /// Defines an interface allowing the user to manipulate cookies on the current page.
 /// </summary>
-public interface ICookieJar
+public interface ICookies
 {
     /// <summary>
     /// Gets all cookies defined for the current page.

@@ -27,7 +27,7 @@ public interface IOptions
     /// <summary>
     /// Gets an object allowing the user to manipulate cookies on the page.
     /// </summary>
-    ICookieJar Cookies { get; }
+    ICookies Cookies { get; }
 
     /// <summary>
     /// Gets an object allowing the user to manipulate the currently-focused browser window.
