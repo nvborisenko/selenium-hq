@@ -115,8 +115,8 @@ class StorageTest : BiDiTestFixture
     {
         driver.Url = UrlBuilder.WhereIs("animals");
 
-        driver.Manage().Cookies.AddCookie(new("key1", "value1"));
-        driver.Manage().Cookies.AddCookie(new("key2", "value2"));
+        driver.Manage().Cookies.Add(new("key1", "value1"));
+        driver.Manage().Cookies.Add(new("key2", "value2"));
 
         var cookies = await bidi.Storage.GetCookiesAsync();
 
@@ -131,8 +131,8 @@ class StorageTest : BiDiTestFixture
     {
         driver.Url = UrlBuilder.WhereIs("animals");
 
-        driver.Manage().Cookies.AddCookie(new("key1", "value1"));
-        driver.Manage().Cookies.AddCookie(new("key2", "value2"));
+        driver.Manage().Cookies.Add(new("key1", "value1"));
+        driver.Manage().Cookies.Add(new("key2", "value2"));
 
         var result = await bidi.Storage.DeleteCookiesAsync();
 
@@ -150,8 +150,8 @@ class StorageTest : BiDiTestFixture
     {
         driver.Url = UrlBuilder.WhereIs("animals");
 
-        driver.Manage().Cookies.AddCookie(new("key1", "value1"));
-        driver.Manage().Cookies.AddCookie(new("key2", "value2"));
+        driver.Manage().Cookies.Add(new("key1", "value1"));
+        driver.Manage().Cookies.Add(new("key2", "value2"));
 
         var result = await bidi.Storage.DeleteCookiesAsync(new() { Filter = new() { Name = "key1" } });
 
@@ -176,7 +176,7 @@ class StorageTest : BiDiTestFixture
 
         driver.Url = UrlBuilder.WhereIs("simpleTest");
 
-        var result = driver.Manage().Cookies.AllCookies;
+        var result = driver.Manage().Cookies.Get();
 
         Assert.That(result, Is.Empty);
     }

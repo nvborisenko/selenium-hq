@@ -46,7 +46,7 @@ public class TextPagesTest : DriverTestFixture
         driver.Url = textPage;
 
         Cookie cookie = new Cookie("hello", "goodbye");
-        Assert.That(() => driver.Manage().Cookies.AddCookie(cookie), Throws.InstanceOf<WebDriverException>());
+        Assert.That(() => driver.Manage().Cookies.Add(cookie), Throws.InstanceOf<WebDriverException>());
     }
 
     //------------------------------------------------------------------

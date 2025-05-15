@@ -18,7 +18,6 @@
 // </copyright>
 
 using NUnit.Framework;
-using System.Collections.ObjectModel;
 
 namespace OpenQA.Selenium;
 
@@ -49,7 +48,7 @@ public class ObjectStateAssumptionsTest : DriverTestFixture
     public void OptionsForUninitializedWebDriverDoesNotThrowException()
     {
         IOptions options = driver.Manage();
-        ReadOnlyCollection<Cookie> allCookies = options.Cookies.AllCookies;
+        var allCookies = options.Cookies.Get();
     }
 
     /**

@@ -18,7 +18,7 @@
 // </copyright>
 
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 
 namespace OpenQA.Selenium;
 
@@ -30,14 +30,7 @@ public interface ICookies
     /// <summary>
     /// Gets all cookies defined for the current page.
     /// </summary>
-    ReadOnlyCollection<Cookie> AllCookies { get; }
-
-    /// <summary>
-    /// Adds a cookie to the current page.
-    /// </summary>
-    /// <param name="cookie">The <see cref="Cookie"/> object to be added.</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
-    void AddCookie(Cookie cookie);
+    IReadOnlyList<Cookie> Get();
 
     /// <summary>
     /// Gets a cookie with the specified name.
@@ -46,24 +39,31 @@ public interface ICookies
     /// <returns>The <see cref="Cookie"/> containing the name. Returns <see langword="null"/>
     /// if no cookie with the specified name is found.</returns>
     /// <exception cref="ArgumentException">If <paramref name="name"/> is <see langword="null"/> or <see cref="string.Empty"/>.</exception>
-    Cookie? GetCookieNamed(string name);
+    Cookie? Get(string name);
+
+    /// <summary>
+    /// Adds a cookie to the current page.
+    /// </summary>
+    /// <param name="cookie">The <see cref="Cookie"/> object to be added.</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
+    void Add(Cookie cookie);
 
     /// <summary>
     /// Deletes the specified cookie from the page.
     /// </summary>
     /// <param name="cookie">The <see cref="Cookie"/> to be deleted.</param>
     /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
-    void DeleteCookie(Cookie cookie);
+    void Delete(Cookie cookie);
 
     /// <summary>
     /// Deletes the cookie with the specified name from the page.
     /// </summary>
     /// <param name="name">The name of the cookie to be deleted.</param>
     /// <exception cref="ArgumentException">If <paramref name="name"/> is <see langword="null"/> or <see cref="string.Empty"/>.</exception>
-    void DeleteCookieNamed(string name);
+    void Delete(string name);
 
     /// <summary>
     /// Deletes all cookies from the page.
     /// </summary>
-    void DeleteAllCookies();
+    void Delete();
 }

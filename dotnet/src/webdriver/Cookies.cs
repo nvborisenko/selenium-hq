@@ -28,84 +28,24 @@ internal sealed class Cookies(WebDriver driver) : ICookies
     /// <summary>
     /// Gets all cookies defined for the current page.
     /// </summary>
-    public ReadOnlyCollection<Cookie> AllCookies
+    public IReadOnlyList<Cookie> Get()
     {
-        get
-        {
-            Response response = driver.Execute(DriverCommand.GetAllCookies, new Dictionary<string, object>());
+        Response response = driver.Execute(DriverCommand.GetAllCookies, new Dictionary<string, object>());
 
-            List<Cookie> toReturn = new List<Cookie>();
-            if (response.Value is object?[] cookies)
+        List<Cookie> toReturn = new List<Cookie>();
+        if (response.Value is object?[] cookies)
+        {
+            foreach (object? rawCookie in cookies)
             {
-                foreach (object? rawCookie in cookies)
+                if (rawCookie != null)
                 {
-                    if (rawCookie != null)
-                    {
-                        Cookie newCookie = Cookie.FromDictionary((Dictionary<string, object?>)rawCookie);
-                        toReturn.Add(newCookie);
-                    }
+                    Cookie newCookie = Cookie.FromDictionary((Dictionary<string, object?>)rawCookie);
+                    toReturn.Add(newCookie);
                 }
             }
-
-            return new ReadOnlyCollection<Cookie>(toReturn);
-        }
-    }
-
-    /// <summary>
-    /// Method for creating a cookie in the browser
-    /// </summary>
-    /// <param name="cookie"><see cref="Cookie"/> that represents a cookie in the browser</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
-    public void AddCookie(Cookie cookie)
-    {
-        if (cookie is null)
-        {
-            throw new ArgumentNullException(nameof(cookie));
         }
 
-        Dictionary<string, object> parameters = new Dictionary<string, object>();
-        parameters.Add("cookie", cookie);
-        driver.Execute(DriverCommand.AddCookie, parameters);
-    }
-
-    /// <summary>
-    /// Delete the cookie by passing in the name of the cookie
-    /// </summary>
-    /// <param name="name">The name of the cookie that is in the browser</param>
-    /// <exception cref="ArgumentException">If <paramref name="name"/> is <see langword="null"/> or <see cref="string.Empty"/>.</exception>
-    public void DeleteCookieNamed(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Cookie name cannot be null or empty", nameof(name));
-        }
-
-        Dictionary<string, object> parameters = new() { { "name", name } };
-
-        driver.Execute(DriverCommand.DeleteCookie, parameters);
-    }
-
-    /// <summary>
-    /// Delete a cookie in the browser by passing in a copy of a cookie
-    /// </summary>
-    /// <param name="cookie">An object that represents a copy of the cookie that needs to be deleted</param>
-    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
-    public void DeleteCookie(Cookie cookie)
-    {
-        if (cookie is null)
-        {
-            throw new ArgumentNullException(nameof(cookie));
-        }
-
-        this.DeleteCookieNamed(cookie.Name);
-    }
-
-    /// <summary>
-    /// Delete All Cookies that are present in the browser
-    /// </summary>
-    public void DeleteAllCookies()
-    {
-        driver.Execute(DriverCommand.DeleteAllCookies, null);
+        return new ReadOnlyCollection<Cookie>(toReturn);
     }
 
     /// <summary>
@@ -114,7 +54,7 @@ internal sealed class Cookies(WebDriver driver) : ICookies
     /// <param name="name">name of the cookie that needs to be returned</param>
     /// <returns>A Cookie from the name; or <see langword="null"/> if not found.</returns>
     /// <exception cref="ArgumentException">If <paramref name="name"/> is <see langword="null"/> or <see cref="string.Empty"/>.</exception>
-    public Cookie? GetCookieNamed(string name)
+    public Cookie? Get(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -131,5 +71,62 @@ internal sealed class Cookies(WebDriver driver) : ICookies
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Method for creating a cookie in the browser
+    /// </summary>
+    /// <param name="cookie"><see cref="Cookie"/> that represents a cookie in the browser</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
+    public void Add(Cookie cookie)
+    {
+        if (cookie is null)
+        {
+            throw new ArgumentNullException(nameof(cookie));
+        }
+
+        Dictionary<string, object> parameters = new Dictionary<string, object>();
+        parameters.Add("cookie", cookie);
+        driver.Execute(DriverCommand.AddCookie, parameters);
+    }
+
+    /// <summary>
+    /// Delete the cookie by passing in the name of the cookie
+    /// </summary>
+    /// <param name="name">The name of the cookie that is in the browser</param>
+    /// <exception cref="ArgumentException">If <paramref name="name"/> is <see langword="null"/> or <see cref="string.Empty"/>.</exception>
+    public void Delete(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Cookie name cannot be null or empty", nameof(name));
+        }
+
+        Dictionary<string, object> parameters = new() { { "name", name } };
+
+        driver.Execute(DriverCommand.DeleteCookie, parameters);
+    }
+
+    /// <summary>
+    /// Delete a cookie in the browser by passing in a copy of a cookie
+    /// </summary>
+    /// <param name="cookie">An object that represents a copy of the cookie that needs to be deleted</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="cookie"/> is <see langword="null"/>.</exception>
+    public void Delete(Cookie cookie)
+    {
+        if (cookie is null)
+        {
+            throw new ArgumentNullException(nameof(cookie));
+        }
+
+        this.Delete(cookie.Name);
+    }
+
+    /// <summary>
+    /// Delete All Cookies that are present in the browser
+    /// </summary>
+    public void Delete()
+    {
+        driver.Execute(DriverCommand.DeleteAllCookies, null);
     }
 }

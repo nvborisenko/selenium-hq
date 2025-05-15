@@ -91,7 +91,7 @@ class NetworkEventsTest : BiDiTestFixture
 
         await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
-        driver.Manage().Cookies.AddCookie(new("foo", "bar"));
+        driver.Manage().Cookies.Add(new("foo", "bar"));
 
         await using var subscription = await bidi.Network.OnBeforeRequestSentAsync(tcs.SetResult);
 
