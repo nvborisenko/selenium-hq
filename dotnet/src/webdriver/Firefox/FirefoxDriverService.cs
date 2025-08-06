@@ -19,6 +19,7 @@
 
 using OpenQA.Selenium.Internal;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -218,55 +219,25 @@ public sealed class FirefoxDriverService : DriverService
         }
     }
 
-    /// <summary>
-    /// Handles the event when the driver service process is starting.
-    /// </summary>
-    /// <param name="eventArgs">The event arguments containing information about the driver service process.</param>
-    /// <remarks>
-    /// This method initializes a log writer if a log path is specified and redirects output streams to capture logs.
-    /// </remarks>
-    protected override void OnDriverProcessStarting(DriverProcessStartingEventArgs eventArgs)
+    protected override void OnDriverProcessOutputDataReceivedHandler(object? sender, DataReceivedEventArgs eventArgs)
     {
-        if (!string.IsNullOrEmpty(this.LogPath))
+        base.OnDriverProcessOutputDataReceivedHandler(sender, eventArgs);
+
+        if (LogPath is not null && eventArgs.Data is not null)
         {
-            string? directory = Path.GetDirectoryName(this.LogPath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            if (logWriter is null)
             {
-                Directory.CreateDirectory(directory);
+                string? directory = Path.GetDirectoryName(this.LogPath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                logWriter = new StreamWriter(this.LogPath, append: true) { AutoFlush = true };
             }
 
-            // Initialize the log writer
-            logWriter = new StreamWriter(this.LogPath, append: true) { AutoFlush = true };
-
-            // Configure process to redirect output
-            eventArgs.DriverServiceProcessStartInfo.RedirectStandardOutput = true;
-            eventArgs.DriverServiceProcessStartInfo.RedirectStandardError = true;
+            logWriter.WriteLine(eventArgs.Data);
         }
-
-        base.OnDriverProcessStarting(eventArgs);
-    }
-
-    /// <summary>
-    /// Handles the event when the driver process has started.
-    /// </summary>
-    /// <param name="eventArgs">The event arguments containing information about the started driver process.</param>
-    /// <remarks>
-    /// This method reads the output and error streams asynchronously and writes them to the log file if available.
-    /// </remarks>
-    protected override void OnDriverProcessStarted(DriverProcessStartedEventArgs eventArgs)
-    {
-        if (logWriter == null) return;
-        if (eventArgs.StandardOutputStreamReader != null)
-        {
-            _ = Task.Run(() => ReadStreamAsync(eventArgs.StandardOutputStreamReader));
-        }
-
-        if (eventArgs.StandardErrorStreamReader != null)
-        {
-            _ = Task.Run(() => ReadStreamAsync(eventArgs.StandardErrorStreamReader));
-        }
-
-        base.OnDriverProcessStarted(eventArgs);
     }
 
     /// <summary>

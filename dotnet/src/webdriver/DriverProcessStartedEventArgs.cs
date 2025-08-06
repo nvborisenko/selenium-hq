@@ -41,15 +41,16 @@ public class DriverProcessStartedEventArgs : EventArgs
         }
 
         this.ProcessId = driverProcess.Id;
-        if (driverProcess.StartInfo.RedirectStandardOutput && !driverProcess.StartInfo.UseShellExecute)
-        {
-            this.StandardOutputStreamReader = driverProcess.StandardOutput;
-        }
+        // this is bad? analyze and fix/remove
+        //if (driverProcess.StartInfo.RedirectStandardOutput && !driverProcess.StartInfo.UseShellExecute)
+        //{
+        //    this.StandardOutputStreamReader = driverProcess.StandardOutput;
+        //}
 
-        if (driverProcess.StartInfo.RedirectStandardError && !driverProcess.StartInfo.UseShellExecute)
-        {
-            this.StandardErrorStreamReader = driverProcess.StandardError;
-        }
+        //if (driverProcess.StartInfo.RedirectStandardError && !driverProcess.StartInfo.UseShellExecute)
+        //{
+        //    this.StandardErrorStreamReader = driverProcess.StandardError;
+        //}
     }
 
     /// <summary>

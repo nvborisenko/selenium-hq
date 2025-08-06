@@ -17,6 +17,7 @@
 // under the License.
 // </copyright>
 
+using OpenQA.Selenium.Internal.Logging;
 using OpenQA.Selenium.Remote;
 using System;
 using System.Diagnostics;
@@ -203,6 +204,8 @@ public abstract class DriverService : ICommandServer
         }
     }
 
+    private static ILogger _logger { get; } = Log.GetLogger<DriverService>();
+
     /// <summary>
     /// Releases all resources associated with this <see cref="DriverService"/>.
     /// </summary>
@@ -243,11 +246,22 @@ public abstract class DriverService : ICommandServer
         this.driverServiceProcess.StartInfo.UseShellExecute = false;
         this.driverServiceProcess.StartInfo.CreateNoWindow = this.HideCommandPromptWindow;
 
+        this.driverServiceProcess.StartInfo.RedirectStandardOutput = true;
+        this.driverServiceProcess.StartInfo.RedirectStandardError = true;
+
+        this.driverServiceProcess.OutputDataReceived += this.OnDriverProcessOutputDataReceivedHandler;
+        this.driverServiceProcess.ErrorDataReceived += this.OnDriverProcessOutputDataReceivedHandler;
+
         DriverProcessStartingEventArgs eventArgs = new DriverProcessStartingEventArgs(this.driverServiceProcess.StartInfo);
         this.OnDriverProcessStarting(eventArgs);
 
         this.driverServiceProcess.Start();
+
+        this.driverServiceProcess.BeginOutputReadLine();
+        this.driverServiceProcess.BeginErrorReadLine();
+
         bool serviceAvailable = this.WaitForServiceInitialization();
+
         DriverProcessStartedEventArgs processStartedEventArgs = new DriverProcessStartedEventArgs(this.driverServiceProcess);
         this.OnDriverProcessStarted(processStartedEventArgs);
 
@@ -306,6 +320,16 @@ public abstract class DriverService : ICommandServer
         }
 
         this.DriverProcessStarted?.Invoke(this, eventArgs);
+    }
+
+    protected virtual void OnDriverProcessOutputDataReceivedHandler(object? sender, DataReceivedEventArgs eventArgs)
+    {
+        if (eventArgs.Data is null) return;
+
+        if (_logger.IsEnabled(LogEventLevel.Trace))
+        {
+            _logger.Trace(eventArgs.Data);
+        }
     }
 
     /// <summary>
