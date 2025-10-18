@@ -144,6 +144,6 @@ dotnet-bin
 .metadata/
 .npmrc
 
-# HAR files generated during tests
+# HAR files and directories generated during tests
 *.har
-selenium-har-*.jsonl
+selenium-har-*/

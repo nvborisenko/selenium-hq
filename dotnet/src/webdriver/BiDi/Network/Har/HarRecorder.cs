@@ -35,8 +35,7 @@ public sealed class HarRecorder : IHarRecorder
     private readonly HarRecordingOptions _options;
     private readonly HarFile _harFile;
     private readonly Dictionary<string, HarEntry> _pendingRequests;
-    private readonly string _tempFilePath;
-    private readonly object _tempFileLock = new object();
+    private readonly string _tempDirectoryPath;
     private Subscription? _beforeRequestSubscription;
     private Subscription? _responseStartedSubscription;
     private Subscription? _responseCompletedSubscription;
@@ -48,7 +47,8 @@ public sealed class HarRecorder : IHarRecorder
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _harFile = new HarFile();
         _pendingRequests = new Dictionary<string, HarEntry>();
-        _tempFilePath = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.jsonl");
+        _tempDirectoryPath = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}");
+        Directory.CreateDirectory(_tempDirectoryPath);
 
         if (!string.IsNullOrEmpty(options.BrowserName))
         {
@@ -158,28 +158,31 @@ public sealed class HarRecorder : IHarRecorder
                 }
             }
 
+            // Flush entry to dedicated temp file (outside of lock for better concurrency)
+            FlushEntryToTempFile(entry, args.Request.Request.Id);
+            
             lock (_pendingRequests)
             {
-                // Flush entry to temp file instead of keeping in memory
-                FlushEntryToTempFile(entry);
                 _pendingRequests.Remove(args.Request.Request.Id);
             }
         }
     }
 
-    private void FlushEntryToTempFile(HarEntry entry)
+    private void FlushEntryToTempFile(HarEntry entry, string requestId)
     {
-        lock (_tempFileLock)
-        {
-            var jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            };
+        // Use dedicated file per entry for better concurrency safety
+        var sanitizedId = string.Concat(requestId.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_'));
+        var fileName = $"{sanitizedId}_{Guid.NewGuid()}.json";
+        var filePath = Path.Combine(_tempDirectoryPath, fileName);
 
-            var entryJson = JsonSerializer.Serialize(entry, jsonOptions);
-            File.AppendAllText(_tempFilePath, entryJson + Environment.NewLine);
-        }
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
+
+        var entryJson = JsonSerializer.Serialize(entry, jsonOptions);
+        File.WriteAllText(filePath, entryJson);
     }
 
     private string GetContentType(List<HarHeader> headers)
@@ -309,30 +312,32 @@ public sealed class HarRecorder : IHarRecorder
         return 0;
     }
 
-    private void LoadEntriesFromTempFile()
+    private void LoadEntriesFromTempFiles()
     {
-        lock (_tempFileLock)
+        _harFile.Log.Entries.Clear();
+
+        if (Directory.Exists(_tempDirectoryPath))
         {
-            _harFile.Log.Entries.Clear();
-
-            if (File.Exists(_tempFilePath))
+            var jsonOptions = new JsonSerializerOptions
             {
-                var jsonOptions = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
+                PropertyNameCaseInsensitive = true
+            };
 
-                var lines = File.ReadAllLines(_tempFilePath);
-                foreach (var line in lines)
+            var files = Directory.GetFiles(_tempDirectoryPath, "*.json");
+            foreach (var file in files)
+            {
+                try
                 {
-                    if (!string.IsNullOrWhiteSpace(line))
+                    var entryJson = File.ReadAllText(file);
+                    var entry = JsonSerializer.Deserialize<HarEntry>(entryJson, jsonOptions);
+                    if (entry != null)
                     {
-                        var entry = JsonSerializer.Deserialize<HarEntry>(line, jsonOptions);
-                        if (entry != null)
-                        {
-                            _harFile.Log.Entries.Add(entry);
-                        }
+                        _harFile.Log.Entries.Add(entry);
                     }
+                }
+                catch
+                {
+                    // Skip corrupted or incomplete files
                 }
             }
         }
@@ -350,8 +355,8 @@ public sealed class HarRecorder : IHarRecorder
             throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
         }
 
-        // Load entries from temp file before saving
-        LoadEntriesFromTempFile();
+        // Load entries from temp files before saving
+        LoadEntriesFromTempFiles();
 
         var options = new JsonSerializerOptions
         {
@@ -389,16 +394,16 @@ public sealed class HarRecorder : IHarRecorder
             await _bidi.Network.RemoveDataCollectorAsync(_dataCollector).ConfigureAwait(false);
         }
 
-        // Clean up temp file
-        if (File.Exists(_tempFilePath))
+        // Clean up temp directory
+        if (Directory.Exists(_tempDirectoryPath))
         {
             try
             {
-                File.Delete(_tempFilePath);
+                Directory.Delete(_tempDirectoryPath, recursive: true);
             }
             catch
             {
-                // Ignore errors when deleting temp file
+                // Ignore errors when deleting temp directory
             }
         }
     }
