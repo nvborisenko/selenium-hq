@@ -36,8 +36,8 @@ public static class BiDiHarExtensions
     /// </summary>
     /// <param name="bidi">The BiDi instance.</param>
     /// <param name="options">Optional configuration options.</param>
-    /// <returns>A task that represents the asynchronous operation and returns a HarRecorder.</returns>
-    public static async Task<HarRecorder> CaptureHarAsync(this BiDi bidi, HarCaptureOptions? options = null)
+    /// <returns>A task that represents the asynchronous operation and returns a IHarRecorder.</returns>
+    public static async Task<IHarRecorder> CaptureHarAsync(this BiDi bidi, HarCaptureOptions? options = null)
     {
         if (bidi is null) throw new ArgumentNullException(nameof(bidi));
 
@@ -64,9 +64,22 @@ public sealed class HarCaptureOptions
 }
 
 /// <summary>
+/// Interface for recording network traffic and saving it as HAR format.
+/// </summary>
+public interface IHarRecorder : IAsyncDisposable
+{
+    /// <summary>
+    /// Saves the captured network traffic to a HAR file.
+    /// </summary>
+    /// <param name="filePath">The path where the HAR file should be saved.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task SaveAsync(string filePath);
+}
+
+/// <summary>
 /// Records network traffic and provides methods to save it as HAR format.
 /// </summary>
-public sealed class HarRecorder : IAsyncDisposable
+public sealed class HarRecorder : IHarRecorder
 {
     private readonly BiDi _bidi;
     private readonly HarCaptureOptions _options;
@@ -344,17 +357,6 @@ public sealed class HarRecorder : IAsyncDisposable
             return timings.ResponseEnd - timings.FetchStart;
         }
         return 0;
-    }
-
-    /// <summary>
-    /// Gets the captured HAR file.
-    /// </summary>
-    /// <returns>The HAR file containing all captured network traffic.</returns>
-    public HarFile GetHar()
-    {
-        // Read entries from temp file
-        LoadEntriesFromTempFile();
-        return _harFile;
     }
 
     private void LoadEntriesFromTempFile()

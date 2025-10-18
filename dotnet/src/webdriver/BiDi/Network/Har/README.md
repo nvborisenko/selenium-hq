@@ -35,10 +35,6 @@ await Task.Delay(2000);
 
 // Save the captured traffic to a HAR file
 await recorder.SaveAsync("network-traffic.har");
-
-// Or get the HAR object directly
-var har = recorder.GetHar();
-Console.WriteLine($"Captured {har.Log.Entries.Count} network requests");
 ```
 
 ## HAR Capture Options
@@ -62,13 +58,13 @@ The generated HAR file follows the HAR 1.2 specification and includes:
 
 By default, the HAR recorder captures request and response bodies for all network traffic. A network data collector is automatically created when you start capturing traffic. This provides complete visibility into all request and response payloads.
 
-**Memory Optimization:** To minimize memory usage, captured network entries are written to a temporary file as they are completed. The entries are only loaded into memory when you call `GetHar()` or `SaveAsync()`. This allows for capturing large amounts of network traffic without consuming excessive memory.
+**Memory Optimization:** To minimize memory usage, captured network entries are written to a temporary file as they are completed. The entries are only loaded into memory when you call `SaveAsync()`. This allows for capturing large amounts of network traffic without consuming excessive memory.
 
 **Note:** Capturing request/response bodies may increase memory usage for large requests/responses.
 
 ## Disposing the Recorder
 
-The `HarRecorder` implements `IAsyncDisposable` and should be disposed properly to unsubscribe from network events and clean up the data collector:
+The `IHarRecorder` implements `IAsyncDisposable` and should be disposed properly to unsubscribe from network events and clean up the data collector:
 
 ```csharp
 await using var recorder = await bidi.CaptureHarAsync();

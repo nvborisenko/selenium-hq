@@ -33,29 +33,51 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task CanCaptureNetworkTrafficToHar()
     {
-        await using var recorder = await bidi.CaptureHarAsync(new HarCaptureOptions
+        var tempFile = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.har");
+
+        try
         {
-            BrowserName = "TestBrowser",
-            BrowserVersion = "1.0"
-        });
+            await using var recorder = await bidi.CaptureHarAsync(new HarCaptureOptions
+            {
+                BrowserName = "TestBrowser",
+                BrowserVersion = "1.0"
+            });
 
-        await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
+            await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
-        var har = recorder.GetHar();
+            await recorder.SaveAsync(tempFile);
 
-        Assert.That(har, Is.Not.Null);
-        Assert.That(har.Log, Is.Not.Null);
-        Assert.That(har.Log.Version, Is.EqualTo("1.2"));
-        Assert.That(har.Log.Creator.Name, Is.EqualTo("Selenium"));
-        Assert.That(har.Log.Browser, Is.Not.Null);
-        Assert.That(har.Log.Browser.Name, Is.EqualTo("TestBrowser"));
-        Assert.That(har.Log.Browser.Version, Is.EqualTo("1.0"));
-        Assert.That(har.Log.Entries, Is.Not.Empty);
+            Assert.That(File.Exists(tempFile), Is.True);
 
-        var entry = har.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
-        Assert.That(entry, Is.Not.Null);
-        Assert.That(entry.Request.Method, Is.EqualTo("GET"));
-        Assert.That(entry.Response.Status, Is.EqualTo(200));
+            var jsonContent = await File.ReadAllTextAsync(tempFile);
+            Assert.That(jsonContent, Is.Not.Empty);
+
+            var harFile = JsonSerializer.Deserialize<HarFile>(jsonContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            Assert.That(harFile, Is.Not.Null);
+            Assert.That(harFile.Log, Is.Not.Null);
+            Assert.That(harFile.Log.Version, Is.EqualTo("1.2"));
+            Assert.That(harFile.Log.Creator.Name, Is.EqualTo("Selenium"));
+            Assert.That(harFile.Log.Browser, Is.Not.Null);
+            Assert.That(harFile.Log.Browser.Name, Is.EqualTo("TestBrowser"));
+            Assert.That(harFile.Log.Browser.Version, Is.EqualTo("1.0"));
+            Assert.That(harFile.Log.Entries, Is.Not.Empty);
+
+            var entry = harFile.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+            Assert.That(entry, Is.Not.Null);
+            Assert.That(entry.Request.Method, Is.EqualTo("GET"));
+            Assert.That(entry.Response.Status, Is.EqualTo(200));
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
     }
 
     [Test]
@@ -97,34 +119,72 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task HarEntriesContainRequestDetails()
     {
-        await using var recorder = await bidi.CaptureHarAsync();
+        var tempFile = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.har");
 
-        await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
+        try
+        {
+            await using var recorder = await bidi.CaptureHarAsync();
 
-        var har = recorder.GetHar();
-        var entry = har.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+            await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
-        Assert.That(entry, Is.Not.Null);
-        Assert.That(entry.StartedDateTime, Is.Not.Empty);
-        Assert.That(entry.Time, Is.GreaterThanOrEqualTo(0));
-        Assert.That(entry.Request.Headers, Is.Not.Empty);
-        Assert.That(entry.Response.Headers, Is.Not.Empty);
-        Assert.That(entry.Timings, Is.Not.Null);
+            await recorder.SaveAsync(tempFile);
+
+            var jsonContent = await File.ReadAllTextAsync(tempFile);
+            var harFile = JsonSerializer.Deserialize<HarFile>(jsonContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var entry = harFile.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+
+            Assert.That(entry, Is.Not.Null);
+            Assert.That(entry.StartedDateTime, Is.Not.Empty);
+            Assert.That(entry.Time, Is.GreaterThanOrEqualTo(0));
+            Assert.That(entry.Request.Headers, Is.Not.Empty);
+            Assert.That(entry.Response.Headers, Is.Not.Empty);
+            Assert.That(entry.Timings, Is.Not.Null);
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
     }
 
     [Test]
     public async Task CanCaptureRequestAndResponseBodies()
     {
-        await using var recorder = await bidi.CaptureHarAsync();
+        var tempFile = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.har");
 
-        await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
+        try
+        {
+            await using var recorder = await bidi.CaptureHarAsync();
 
-        var har = recorder.GetHar();
-        var entry = har.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+            await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
-        Assert.That(entry, Is.Not.Null);
-        Assert.That(entry.Response.Content.Text, Is.Not.Null);
-        Assert.That(entry.Response.Content.Text, Is.Not.Empty);
-        Assert.That(entry.Response.Content.Size, Is.GreaterThan(0));
+            await recorder.SaveAsync(tempFile);
+
+            var jsonContent = await File.ReadAllTextAsync(tempFile);
+            var harFile = JsonSerializer.Deserialize<HarFile>(jsonContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var entry = harFile.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+
+            Assert.That(entry, Is.Not.Null);
+            Assert.That(entry.Response.Content.Text, Is.Not.Null);
+            Assert.That(entry.Response.Content.Text, Is.Not.Empty);
+            Assert.That(entry.Response.Content.Size, Is.GreaterThan(0));
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
     }
 }
