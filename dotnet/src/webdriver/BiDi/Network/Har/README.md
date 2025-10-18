@@ -20,11 +20,12 @@ using var driver = new ChromeDriver(options);
 // Connect to BiDi
 await using var bidi = await driver.AsBiDiAsync();
 
-// Start capturing network traffic
+// Start capturing network traffic with body content
 await using var recorder = await bidi.CaptureNetworkTrafficAsync(new HarCaptureOptions
 {
     BrowserName = "Chrome",
-    BrowserVersion = "120.0"
+    BrowserVersion = "120.0",
+    IncludeContent = true  // Enable request/response body capture
 });
 
 // Navigate to a page
@@ -45,10 +46,11 @@ Console.WriteLine($"Captured {har.Log.Entries.Count} network requests");
 
 The `HarCaptureOptions` class allows you to configure the capture:
 
-- `IncludeResponseContent`: Whether to include response content in the HAR file (default: false)
-- `IncludeContent`: Whether to include request/response body content (default: false)
+- `IncludeContent`: Whether to include request/response body content (default: false). When enabled, a data collector is created to capture request and response bodies.
 - `BrowserName`: The browser name to include in the HAR metadata
 - `BrowserVersion`: The browser version to include in the HAR metadata
+
+**Note:** Setting `IncludeContent = true` will create a network data collector that captures request and response bodies. This may increase memory usage for large requests/responses.
 
 ## HAR File Format
 
@@ -57,11 +59,12 @@ The generated HAR file follows the HAR 1.2 specification and includes:
 - Request details (method, URL, headers, cookies, query parameters)
 - Response details (status code, headers, content type)
 - Timing information (DNS, connect, SSL, send, wait, receive)
+- Request/response body content (when `IncludeContent` is enabled)
 - Metadata (browser info, timestamps)
 
 ## Disposing the Recorder
 
-The `HarRecorder` implements `IAsyncDisposable` and should be disposed properly to unsubscribe from network events:
+The `HarRecorder` implements `IAsyncDisposable` and should be disposed properly to unsubscribe from network events and clean up the data collector:
 
 ```csharp
 await using var recorder = await bidi.CaptureNetworkTrafficAsync();

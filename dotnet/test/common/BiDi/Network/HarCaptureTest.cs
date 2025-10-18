@@ -111,4 +111,23 @@ class HarCaptureTest : BiDiTestFixture
         Assert.That(entry.Response.Headers, Is.Not.Empty);
         Assert.That(entry.Timings, Is.Not.Null);
     }
+
+    [Test]
+    public async Task CanCaptureRequestAndResponseBodies()
+    {
+        await using var recorder = await bidi.CaptureNetworkTrafficAsync(new HarCaptureOptions
+        {
+            IncludeContent = true
+        });
+
+        await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
+
+        var har = recorder.GetHar();
+        var entry = har.Log.Entries.FirstOrDefault(e => e.Request.Url.Contains("logEntryAdded.html"));
+
+        Assert.That(entry, Is.Not.Null);
+        Assert.That(entry.Response.Content.Text, Is.Not.Null);
+        Assert.That(entry.Response.Content.Text, Is.Not.Empty);
+        Assert.That(entry.Response.Content.Size, Is.GreaterThan(0));
+    }
 }

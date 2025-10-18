@@ -53,11 +53,6 @@ public static class BiDiHarExtensions
 public sealed class HarCaptureOptions
 {
     /// <summary>
-    /// Gets or sets a value indicating whether to include response content in the HAR file.
-    /// </summary>
-    public bool IncludeResponseContent { get; set; } = false;
-
-    /// <summary>
     /// Gets or sets a value indicating whether to include request/response body content in the HAR file.
     /// </summary>
     public bool IncludeContent { get; set; } = false;
@@ -85,6 +80,7 @@ public sealed class HarRecorder : IAsyncDisposable
     private Subscription? _beforeRequestSubscription;
     private Subscription? _responseStartedSubscription;
     private Subscription? _responseCompletedSubscription;
+    private Collector? _dataCollector;
 
     internal HarRecorder(BiDi bidi, HarCaptureOptions options)
     {
@@ -105,6 +101,12 @@ public sealed class HarRecorder : IAsyncDisposable
 
     internal async Task StartAsync()
     {
+        // Add data collector if content capture is enabled
+        if (_options.IncludeContent)
+        {
+            _dataCollector = await _bidi.Network.AddDataCollectorAsync([DataType.Request, DataType.Response], 200000000).ConfigureAwait(false);
+        }
+
         _beforeRequestSubscription = await _bidi.Network.OnBeforeRequestSentAsync(OnBeforeRequestSent).ConfigureAwait(false);
         _responseStartedSubscription = await _bidi.Network.OnResponseStartedAsync(OnResponseStarted).ConfigureAwait(false);
         _responseCompletedSubscription = await _bidi.Network.OnResponseCompletedAsync(OnResponseCompleted).ConfigureAwait(false);
@@ -142,22 +144,74 @@ public sealed class HarRecorder : IAsyncDisposable
         }
     }
 
-    private void OnResponseCompleted(ResponseCompletedEventArgs args)
+    private async void OnResponseCompleted(ResponseCompletedEventArgs args)
     {
+        HarEntry? entry = null;
+        
         lock (_pendingRequests)
         {
-            if (_pendingRequests.TryGetValue(args.Request.Request.Id, out var entry))
+            if (_pendingRequests.TryGetValue(args.Request.Request.Id, out entry))
             {
                 entry.Response = ConvertResponse(args.Response);
                 
                 // Calculate total time
                 var timings = args.Request.Timings;
                 entry.Time = CalculateTotalTime(timings);
+            }
+        }
 
+        if (entry != null)
+        {
+            // Retrieve request and response bodies if content capture is enabled
+            if (_options.IncludeContent && _dataCollector != null)
+            {
+                try
+                {
+                    // Get request body
+                    var requestBody = await _bidi.Network.GetDataAsync(DataType.Request, args.Request.Request).ConfigureAwait(false);
+                    if (requestBody != null)
+                    {
+                        entry.Request.PostData = new HarPostData
+                        {
+                            MimeType = GetContentType(entry.Request.Headers),
+                            Text = (string)requestBody
+                        };
+                    }
+                }
+                catch
+                {
+                    // Request body may not be available for all requests (e.g., GET requests)
+                }
+
+                try
+                {
+                    // Get response body
+                    var responseBody = await _bidi.Network.GetDataAsync(DataType.Response, args.Request.Request).ConfigureAwait(false);
+                    if (responseBody != null)
+                    {
+                        var bodyText = (string)responseBody;
+                        entry.Response.Content.Text = bodyText;
+                        entry.Response.Content.Size = System.Text.Encoding.UTF8.GetByteCount(bodyText);
+                    }
+                }
+                catch
+                {
+                    // Response body may not be available for all responses
+                }
+            }
+
+            lock (_pendingRequests)
+            {
                 _harFile.Log.Entries.Add(entry);
                 _pendingRequests.Remove(args.Request.Request.Id);
             }
         }
+    }
+
+    private string GetContentType(List<HarHeader> headers)
+    {
+        var contentTypeHeader = headers.FirstOrDefault(h => h.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase));
+        return contentTypeHeader?.Value ?? "application/octet-stream";
     }
 
     private HarRequest ConvertRequest(RequestData request)
@@ -331,6 +385,11 @@ public sealed class HarRecorder : IAsyncDisposable
         if (_responseCompletedSubscription != null)
         {
             await _responseCompletedSubscription.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (_dataCollector != null)
+        {
+            await _bidi.Network.RemoveDataCollectorAsync(_dataCollector).ConfigureAwait(false);
         }
     }
 }
