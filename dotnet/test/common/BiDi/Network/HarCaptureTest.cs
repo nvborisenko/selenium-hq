@@ -115,10 +115,7 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task CanCaptureRequestAndResponseBodies()
     {
-        await using var recorder = await bidi.CaptureNetworkTrafficAsync(new HarCaptureOptions
-        {
-            IncludeContent = true
-        });
+        await using var recorder = await bidi.CaptureNetworkTrafficAsync();
 
         await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 

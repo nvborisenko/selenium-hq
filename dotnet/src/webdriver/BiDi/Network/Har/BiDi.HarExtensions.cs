@@ -53,11 +53,6 @@ public static class BiDiHarExtensions
 public sealed class HarCaptureOptions
 {
     /// <summary>
-    /// Gets or sets a value indicating whether to include request/response body content in the HAR file.
-    /// </summary>
-    public bool IncludeContent { get; set; } = false;
-
-    /// <summary>
     /// Gets or sets the browser name to include in the HAR file.
     /// </summary>
     public string? BrowserName { get; set; }
@@ -101,11 +96,8 @@ public sealed class HarRecorder : IAsyncDisposable
 
     internal async Task StartAsync()
     {
-        // Add data collector if content capture is enabled
-        if (_options.IncludeContent)
-        {
-            _dataCollector = await _bidi.Network.AddDataCollectorAsync([DataType.Request, DataType.Response], 200000000).ConfigureAwait(false);
-        }
+        // Always create data collector for capturing request and response bodies
+        _dataCollector = await _bidi.Network.AddDataCollectorAsync([DataType.Request, DataType.Response], 200000000).ConfigureAwait(false);
 
         _beforeRequestSubscription = await _bidi.Network.OnBeforeRequestSentAsync(OnBeforeRequestSent).ConfigureAwait(false);
         _responseStartedSubscription = await _bidi.Network.OnResponseStartedAsync(OnResponseStarted).ConfigureAwait(false);
@@ -162,8 +154,8 @@ public sealed class HarRecorder : IAsyncDisposable
 
         if (entry != null)
         {
-            // Retrieve request and response bodies if content capture is enabled
-            if (_options.IncludeContent && _dataCollector != null)
+            // Retrieve request and response bodies
+            if (_dataCollector != null)
             {
                 try
                 {
