@@ -176,7 +176,7 @@ public sealed class HarRecorder : IAsyncDisposable
             harRequest.Headers.Add(new HarHeader
             {
                 Name = header.Name,
-                Value = header.Value.ToString()
+                Value = (string)header.Value
             });
         }
 
@@ -185,7 +185,12 @@ public sealed class HarRecorder : IAsyncDisposable
             harRequest.Cookies.Add(new HarCookie
             {
                 Name = cookie.Name,
-                Value = cookie.Value.ToString()
+                Value = (string)cookie.Value,
+                Domain = cookie.Domain,
+                Path = cookie.Path,
+                HttpOnly = cookie.HttpOnly,
+                Secure = cookie.Secure,
+                Expires = cookie.Expiry?.ToString("o")
             });
         }
 
@@ -227,16 +232,17 @@ public sealed class HarRecorder : IAsyncDisposable
 
         foreach (var header in response.Headers)
         {
+            var headerValue = (string)header.Value;
             harResponse.Headers.Add(new HarHeader
             {
                 Name = header.Name,
-                Value = header.Value.ToString()
+                Value = headerValue
             });
 
             // Check for redirect URL
             if (header.Name.Equals("Location", StringComparison.OrdinalIgnoreCase))
             {
-                harResponse.RedirectURL = header.Value.ToString();
+                harResponse.RedirectURL = headerValue;
             }
         }
 
