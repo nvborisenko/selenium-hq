@@ -1,4 +1,4 @@
-// <copyright file="HarCaptureTest.cs" company="Selenium Committers">
+// <copyright file="HarRecordingTest.cs" company="Selenium Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -28,16 +28,16 @@ using System.Threading.Tasks;
 
 namespace OpenQA.Selenium.BiDi.Network;
 
-class HarCaptureTest : BiDiTestFixture
+class HarRecordingTest : BiDiTestFixture
 {
     [Test]
-    public async Task CanCaptureNetworkTrafficToHar()
+    public async Task CanRecordNetworkTrafficToHar()
     {
         var tempFile = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.har");
 
         try
         {
-            await using var recorder = await bidi.CaptureHarAsync(new HarCaptureOptions
+            await using var recorder = await bidi.RecordHarAsync(new HarRecordingOptions
             {
                 BrowserName = "TestBrowser",
                 BrowserVersion = "1.0"
@@ -87,7 +87,7 @@ class HarCaptureTest : BiDiTestFixture
 
         try
         {
-            await using var recorder = await bidi.CaptureHarAsync();
+            await using var recorder = await bidi.RecordHarAsync();
 
             await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
@@ -123,7 +123,7 @@ class HarCaptureTest : BiDiTestFixture
 
         try
         {
-            await using var recorder = await bidi.CaptureHarAsync();
+            await using var recorder = await bidi.RecordHarAsync();
 
             await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
@@ -154,13 +154,13 @@ class HarCaptureTest : BiDiTestFixture
     }
 
     [Test]
-    public async Task CanCaptureRequestAndResponseBodies()
+    public async Task CanRecordRequestAndResponseBodies()
     {
         var tempFile = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.har");
 
         try
         {
-            await using var recorder = await bidi.CaptureHarAsync();
+            await using var recorder = await bidi.RecordHarAsync();
 
             await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 

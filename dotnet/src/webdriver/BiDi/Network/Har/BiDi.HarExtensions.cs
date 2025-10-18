@@ -32,25 +32,25 @@ namespace OpenQA.Selenium.BiDi.Network.Har;
 public static class BiDiHarExtensions
 {
     /// <summary>
-    /// Captures network traffic and returns a HAR recorder that can be used to save the captured traffic.
+    /// Records network traffic and returns a HAR recorder that can be used to save the recorded traffic.
     /// </summary>
     /// <param name="bidi">The BiDi instance.</param>
     /// <param name="options">Optional configuration options.</param>
     /// <returns>A task that represents the asynchronous operation and returns a IHarRecorder.</returns>
-    public static async Task<IHarRecorder> CaptureHarAsync(this BiDi bidi, HarCaptureOptions? options = null)
+    public static async Task<IHarRecorder> RecordHarAsync(this BiDi bidi, HarRecordingOptions? options = null)
     {
         if (bidi is null) throw new ArgumentNullException(nameof(bidi));
 
-        var recorder = new HarRecorder(bidi, options ?? new HarCaptureOptions());
+        var recorder = new HarRecorder(bidi, options ?? new HarRecordingOptions());
         await recorder.StartAsync().ConfigureAwait(false);
         return recorder;
     }
 }
 
 /// <summary>
-/// Options for HAR capture.
+/// Options for HAR recording.
 /// </summary>
-public sealed class HarCaptureOptions
+public sealed class HarRecordingOptions
 {
     /// <summary>
     /// Gets or sets the browser name to include in the HAR file.
@@ -82,7 +82,7 @@ public interface IHarRecorder : IAsyncDisposable
 public sealed class HarRecorder : IHarRecorder
 {
     private readonly BiDi _bidi;
-    private readonly HarCaptureOptions _options;
+    private readonly HarRecordingOptions _options;
     private readonly HarFile _harFile;
     private readonly Dictionary<string, HarEntry> _pendingRequests;
     private readonly string _tempFilePath;
@@ -92,7 +92,7 @@ public sealed class HarRecorder : IHarRecorder
     private Subscription? _responseCompletedSubscription;
     private Collector? _dataCollector;
 
-    internal HarRecorder(BiDi bidi, HarCaptureOptions options)
+    internal HarRecorder(BiDi bidi, HarRecordingOptions options)
     {
         _bidi = bidi ?? throw new ArgumentNullException(nameof(bidi));
         _options = options ?? throw new ArgumentNullException(nameof(options));
