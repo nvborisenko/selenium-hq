@@ -37,7 +37,7 @@ public static class BiDiHarExtensions
     /// <param name="bidi">The BiDi instance.</param>
     /// <param name="options">Optional configuration options.</param>
     /// <returns>A task that represents the asynchronous operation and returns a HarRecorder.</returns>
-    public static async Task<HarRecorder> CaptureNetworkTrafficAsync(this BiDi bidi, HarCaptureOptions? options = null)
+    public static async Task<HarRecorder> CaptureHarAsync(this BiDi bidi, HarCaptureOptions? options = null)
     {
         if (bidi is null) throw new ArgumentNullException(nameof(bidi));
 

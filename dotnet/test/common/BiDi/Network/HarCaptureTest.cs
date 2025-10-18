@@ -33,7 +33,7 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task CanCaptureNetworkTrafficToHar()
     {
-        await using var recorder = await bidi.CaptureNetworkTrafficAsync(new HarCaptureOptions
+        await using var recorder = await bidi.CaptureHarAsync(new HarCaptureOptions
         {
             BrowserName = "TestBrowser",
             BrowserVersion = "1.0"
@@ -65,7 +65,7 @@ class HarCaptureTest : BiDiTestFixture
 
         try
         {
-            await using var recorder = await bidi.CaptureNetworkTrafficAsync();
+            await using var recorder = await bidi.CaptureHarAsync();
 
             await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
@@ -97,7 +97,7 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task HarEntriesContainRequestDetails()
     {
-        await using var recorder = await bidi.CaptureNetworkTrafficAsync();
+        await using var recorder = await bidi.CaptureHarAsync();
 
         await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 
@@ -115,7 +115,7 @@ class HarCaptureTest : BiDiTestFixture
     [Test]
     public async Task CanCaptureRequestAndResponseBodies()
     {
-        await using var recorder = await bidi.CaptureNetworkTrafficAsync();
+        await using var recorder = await bidi.CaptureHarAsync();
 
         await context.NavigateAsync(UrlBuilder.WhereIs("bidi/logEntryAdded.html"), new() { Wait = ReadinessState.Complete });
 

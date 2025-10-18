@@ -21,7 +21,7 @@ using var driver = new ChromeDriver(options);
 await using var bidi = await driver.AsBiDiAsync();
 
 // Start capturing network traffic (includes request/response bodies by default)
-await using var recorder = await bidi.CaptureNetworkTrafficAsync(new HarCaptureOptions
+await using var recorder = await bidi.CaptureHarAsync(new HarCaptureOptions
 {
     BrowserName = "Chrome",
     BrowserVersion = "120.0"
@@ -71,7 +71,7 @@ By default, the HAR recorder captures request and response bodies for all networ
 The `HarRecorder` implements `IAsyncDisposable` and should be disposed properly to unsubscribe from network events and clean up the data collector:
 
 ```csharp
-await using var recorder = await bidi.CaptureNetworkTrafficAsync();
+await using var recorder = await bidi.CaptureHarAsync();
 // ... capture network traffic ...
 // Dispose is called automatically when leaving the using block
 ```
