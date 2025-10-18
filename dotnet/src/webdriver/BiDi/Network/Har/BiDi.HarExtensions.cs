@@ -72,6 +72,8 @@ public sealed class HarRecorder : IAsyncDisposable
     private readonly HarCaptureOptions _options;
     private readonly HarFile _harFile;
     private readonly Dictionary<string, HarEntry> _pendingRequests;
+    private readonly string _tempFilePath;
+    private readonly object _tempFileLock = new object();
     private Subscription? _beforeRequestSubscription;
     private Subscription? _responseStartedSubscription;
     private Subscription? _responseCompletedSubscription;
@@ -83,6 +85,7 @@ public sealed class HarRecorder : IAsyncDisposable
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _harFile = new HarFile();
         _pendingRequests = new Dictionary<string, HarEntry>();
+        _tempFilePath = Path.Combine(Path.GetTempPath(), $"selenium-har-{Guid.NewGuid()}.jsonl");
 
         if (!string.IsNullOrEmpty(options.BrowserName))
         {
@@ -194,9 +197,25 @@ public sealed class HarRecorder : IAsyncDisposable
 
             lock (_pendingRequests)
             {
-                _harFile.Log.Entries.Add(entry);
+                // Flush entry to temp file instead of keeping in memory
+                FlushEntryToTempFile(entry);
                 _pendingRequests.Remove(args.Request.Request.Id);
             }
+        }
+    }
+
+    private void FlushEntryToTempFile(HarEntry entry)
+    {
+        lock (_tempFileLock)
+        {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+
+            var entryJson = JsonSerializer.Serialize(entry, jsonOptions);
+            File.AppendAllText(_tempFilePath, entryJson + Environment.NewLine);
         }
     }
 
@@ -333,7 +352,38 @@ public sealed class HarRecorder : IAsyncDisposable
     /// <returns>The HAR file containing all captured network traffic.</returns>
     public HarFile GetHar()
     {
+        // Read entries from temp file
+        LoadEntriesFromTempFile();
         return _harFile;
+    }
+
+    private void LoadEntriesFromTempFile()
+    {
+        lock (_tempFileLock)
+        {
+            _harFile.Log.Entries.Clear();
+
+            if (File.Exists(_tempFilePath))
+            {
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var lines = File.ReadAllLines(_tempFilePath);
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var entry = JsonSerializer.Deserialize<HarEntry>(line, jsonOptions);
+                        if (entry != null)
+                        {
+                            _harFile.Log.Entries.Add(entry);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -347,6 +397,9 @@ public sealed class HarRecorder : IAsyncDisposable
         {
             throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
         }
+
+        // Load entries from temp file before saving
+        LoadEntriesFromTempFile();
 
         var options = new JsonSerializerOptions
         {
@@ -382,6 +435,19 @@ public sealed class HarRecorder : IAsyncDisposable
         if (_dataCollector != null)
         {
             await _bidi.Network.RemoveDataCollectorAsync(_dataCollector).ConfigureAwait(false);
+        }
+
+        // Clean up temp file
+        if (File.Exists(_tempFilePath))
+        {
+            try
+            {
+                File.Delete(_tempFilePath);
+            }
+            catch
+            {
+                // Ignore errors when deleting temp file
+            }
         }
     }
 }

@@ -146,3 +146,4 @@ dotnet-bin
 
 # HAR files generated during tests
 *.har
+selenium-har-*.jsonl
