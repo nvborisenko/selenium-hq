@@ -143,3 +143,6 @@ javascript/selenium-webdriver/.vscode/settings.json
 dotnet-bin
 .metadata/
 .npmrc
+
+# HAR files generated during tests
+*.har
