@@ -23,7 +23,7 @@ using System;
 
 namespace OpenQA.Selenium.BiDi;
 
-interface ITransport : IDisposable
+interface ITransport : IAsyncDisposable
 {
     Task ConnectAsync(CancellationToken cancellationToken);
 

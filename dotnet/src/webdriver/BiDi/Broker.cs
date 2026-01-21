@@ -193,7 +193,7 @@ public sealed class Broker : IAsyncDisposable
             await _eventEmitterTask.ConfigureAwait(false);
         }
 
-        _transport.Dispose();
+        await _transport.DisposeAsync().ConfigureAwait(false);
 
         GC.SuppressFinalize(this);
     }

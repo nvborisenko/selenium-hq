@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace OpenQA.Selenium.BiDi;
 
-sealed class WebSocketTransport(Uri _uri) : ITransport, IDisposable
+sealed class WebSocketTransport(Uri _uri) : ITransport, IAsyncDisposable
 {
     private readonly static ILogger _logger = Internal.Logging.Log.GetLogger<WebSocketTransport>();
 
@@ -97,26 +97,30 @@ sealed class WebSocketTransport(Uri _uri) : ITransport, IDisposable
 
     private bool _disposed;
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (_disposed)
+        if (!_disposed)
         {
-            return;
-        }
+            _disposed = true;
 
-        if (disposing)
-        {
+            if (_webSocket.State is < WebSocketState.Closed)
+            {
+                try
+                {
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+                }
+                catch (Exception ex)
+                {
+                    if (_logger.IsEnabled(LogEventLevel.Warn))
+                    {
+                        _logger.Warn($"Unexpected error occurred while closing WebSocket: {ex}");
+                    }
+                }
+            }
+
             _webSocket.Dispose();
             _sharedMemoryStream.Dispose();
             _socketSendSemaphoreSlim.Dispose();
         }
-
-        _disposed = true;
     }
 }
