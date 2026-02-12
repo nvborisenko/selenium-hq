@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium.Internal.Logging;
 using OpenQA.Selenium.Remote;
@@ -287,6 +288,69 @@ public abstract class DriverService : ICommandServer
     }
 
     /// <summary>
+    /// Asynchronously starts the DriverService if it is not already running.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    [MemberNotNull(nameof(driverServiceProcess))]
+    public async Task StartAsync()
+    {
+        if (this.driverServiceProcess != null)
+        {
+            return;
+        }
+
+        this.driverServiceProcess = new Process();
+
+        if (this.DriverServicePath != null)
+        {
+            if (this.DriverServiceExecutableName is null)
+            {
+                throw new InvalidOperationException("If the driver service path is specified, the driver service executable name must be as well");
+            }
+
+            this.driverServiceProcess.StartInfo.FileName = Path.Combine(this.DriverServicePath, this.DriverServiceExecutableName);
+        }
+        else
+        {
+            var driverFinder = new DriverFinder(this.GetDefaultDriverOptions());
+            var driverPath = await driverFinder.GetDriverPathAsync().ConfigureAwait(false);
+            this.driverServiceProcess.StartInfo.FileName = driverPath;
+        }
+
+        this.driverServiceProcess.StartInfo.Arguments = this.CommandLineArguments;
+        this.driverServiceProcess.StartInfo.UseShellExecute = false;
+        this.driverServiceProcess.StartInfo.CreateNoWindow = this.HideCommandPromptWindow;
+
+        this.driverServiceProcess.StartInfo.RedirectStandardOutput = true;
+        this.driverServiceProcess.StartInfo.RedirectStandardError = true;
+
+        if (this.EnableProcessRedirection)
+        {
+            this.driverServiceProcess.OutputDataReceived += this.OnDriverProcessDataReceived;
+            this.driverServiceProcess.ErrorDataReceived += this.OnDriverProcessDataReceived;
+        }
+
+        DriverProcessStartingEventArgs eventArgs = new DriverProcessStartingEventArgs(this.driverServiceProcess.StartInfo);
+        this.OnDriverProcessStarting(eventArgs);
+
+        this.driverServiceProcess.Start();
+
+        // Important: Start the process and immediately begin reading the output and error streams to avoid IO deadlocks.
+        this.driverServiceProcess.BeginOutputReadLine();
+        this.driverServiceProcess.BeginErrorReadLine();
+
+        bool serviceAvailable = await this.WaitForServiceInitializationAsync(this.InitializationTimeout).ConfigureAwait(false);
+
+        DriverProcessStartedEventArgs processStartedEventArgs = new DriverProcessStartedEventArgs(this.driverServiceProcess);
+        this.OnDriverProcessStarted(processStartedEventArgs);
+
+        if (!serviceAvailable)
+        {
+            throw new WebDriverException($"Cannot start the driver service on {this.ServiceUrl}");
+        }
+    }
+
+    /// <summary>
     /// The browser options instance that corresponds to the driver service
     /// </summary>
     /// <returns></returns>
@@ -433,5 +497,62 @@ public abstract class DriverService : ICommandServer
         }
 
         return isInitialized;
+    }
+
+    private async Task<bool> WaitForServiceInitializationAsync(TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        using var httpClient = new HttpClient();
+        
+        httpClient.DefaultRequestHeaders.ConnectionClose = true;
+        httpClient.Timeout = TimeSpan.FromSeconds(5);
+
+        Uri serviceHealthUri = new Uri(this.ServiceUrl, new Uri(DriverCommand.Status, UriKind.Relative));
+
+        while (!cts.Token.IsCancellationRequested)
+        {
+            // If the driver service process has exited, we can exit early.
+            if (!this.IsRunning)
+            {
+                return false;
+            }
+
+            try
+            {
+                using (var response = await httpClient.GetAsync(serviceHealthUri, cts.Token).ConfigureAwait(false))
+                {
+                    // Checking the response from the 'status' end point. Note that we are simply checking
+                    // that the HTTP status returned is a 200 status, and that the response has the correct
+                    // Content-Type header. A more sophisticated check would parse the JSON response and
+                    // validate its values. At the moment we do not do this more sophisticated check.
+                    if (response.StatusCode == HttpStatusCode.OK && response.Content.Headers.ContentType is { MediaType: string mediaType } && mediaType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (cts.Token.IsCancellationRequested)
+            {
+                // Timeout occurred
+                break;
+            }
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
+            {
+                // Service not ready yet, continue polling
+            }
+
+            try
+            {
+                // Add a small delay between polling attempts to avoid busy waiting
+                await Task.Delay(50, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout occurred during delay
+                break;
+            }
+        }
+
+        return false;
     }
 }
