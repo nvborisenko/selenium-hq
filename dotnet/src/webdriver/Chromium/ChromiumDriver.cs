@@ -137,6 +137,30 @@ public class ChromiumDriver : WebDriver, ISupportsLogs, IDevTools
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChromiumDriver"/> class using the specified executor, skipping session initialization.
+    /// </summary>
+    /// <param name="executor">The <see cref="ICommandExecutor"/> object used to execute commands.</param>
+    /// <param name="options">The <see cref="ChromiumOptions"/> to be used with the ChromiumDriver.</param>
+    /// <param name="skipSessionStart">Must be <see langword="true"/> to skip session initialization.</param>
+    /// <exception cref="ArgumentNullException">If <paramref name="executor"/> or <paramref name="options"/> are <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">If the Chromium options capability name is <see langword="null"/>.</exception>
+    protected ChromiumDriver(ICommandExecutor executor, ChromiumOptions options, bool skipSessionStart)
+        : base(executor, skipSessionStart)
+    {
+        if (executor is null)
+        {
+            throw new ArgumentNullException(nameof(executor));
+        }
+
+        if (options is null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        this.optionsCapabilityName = options.CapabilityName ?? throw new ArgumentException("No chromium options capability name specified", nameof(options));
+    }
+
+    /// <summary>
     /// Gets the dictionary of custom Chromium commands registered with the driver.
     /// </summary>
     protected static IReadOnlyDictionary<string, CommandInfo> ChromiumCustomCommands => new ReadOnlyDictionary<string, CommandInfo>(chromiumCustomCommands);
@@ -484,7 +508,13 @@ public class ChromiumDriver : WebDriver, ISupportsLogs, IDevTools
         base.Dispose(disposing);
     }
 
-    private static ICapabilities ConvertOptionsToCapabilities(ChromiumOptions options)
+    /// <summary>
+    /// Converts <see cref="ChromiumOptions"/> to <see cref="ICapabilities"/>.
+    /// </summary>
+    /// <param name="options">The options to convert.</param>
+    /// <returns>The converted capabilities.</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="options"/> is <see langword="null"/>.</exception>
+    protected static ICapabilities ConvertOptionsToCapabilities(ChromiumOptions options)
     {
         if (options == null)
         {

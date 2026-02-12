@@ -503,7 +503,7 @@ public abstract class DriverService : ICommandServer
     {
         using var cts = new CancellationTokenSource(timeout);
         using var httpClient = new HttpClient();
-        
+
         httpClient.DefaultRequestHeaders.ConnectionClose = true;
         httpClient.Timeout = TimeSpan.FromSeconds(5);
 

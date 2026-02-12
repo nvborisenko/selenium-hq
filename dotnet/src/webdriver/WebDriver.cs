@@ -33,7 +33,7 @@ namespace OpenQA.Selenium;
 /// <summary>
 /// A base class representing a driver for a web browser.
 /// </summary>
-public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFindsElement, ITakesScreenshot, ISupportsPrint, IActionExecutor, IAllowsFileDetection, IHasCapabilities, IHasCommandExecutor, IHasSessionId, ICustomDriverCommandExecutor, IHasVirtualAuthenticator
+public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFindsElement, ITakesScreenshot, ISupportsPrint, IActionExecutor, IAllowsFileDetection, IHasCapabilities, IHasCommandExecutor, IHasSessionId, ICustomDriverCommandExecutor, IHasVirtualAuthenticator, IAsyncDisposable
 {
     /// <summary>
     /// The default command timeout for HTTP requests in a RemoteWebDriver instance.
@@ -72,6 +72,32 @@ public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFinds
             throw;
         }
 
+        this.CompleteInitialization();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebDriver"/> class without starting a session.
+    /// </summary>
+    /// <param name="executor">The <see cref="ICommandExecutor"/> object used to execute commands.</param>
+    /// <param name="skipSessionStart">Must be <see langword="true"/> to skip session initialization.</param>
+    protected WebDriver(ICommandExecutor executor, bool skipSessionStart)
+    {
+        if (!skipSessionStart)
+        {
+            throw new ArgumentException("This constructor is only for skipping session initialization", nameof(skipSessionStart));
+        }
+
+        this.CommandExecutor = executor;
+        this.elementFactory = null!; // Will be initialized by CompleteInitialization()
+        this.SessionId = null!; // Will be initialized by StartSessionAsync()
+        this.Capabilities = null!; // Will be initialized by StartSessionAsync()
+    }
+
+    /// <summary>
+    /// Completes initialization after session has been started.
+    /// </summary>
+    protected void CompleteInitialization()
+    {
         this.elementFactory = new WebElementFactory(this);
         this.registeredCommands.AddRange(DriverCommand.KnownCommands);
 
@@ -417,6 +443,15 @@ public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFinds
     }
 
     /// <summary>
+    /// Asynchronously closes the browser and disposes of the WebDriver.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public async ValueTask QuitAsync()
+    {
+        await this.DisposeAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Method to give you access to switch frames and windows
     /// </summary>
     /// <returns>Returns an Object that allows you to Switch Frames and Windows</returns>
@@ -632,6 +667,64 @@ public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFinds
     }
 
     /// <summary>
+    /// Asynchronously starts a session with the driver
+    /// </summary>
+    /// <param name="capabilities">Capabilities of the browser</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    [MemberNotNull(nameof(SessionId))]
+    [MemberNotNull(nameof(Capabilities))]
+    protected async Task StartSessionAsync(ICapabilities capabilities)
+    {
+        Dictionary<string, object?> parameters = new Dictionary<string, object?>();
+
+        // If the object passed into the RemoteWebDriver constructor is a
+        // RemoteSessionSettings object, it is expected that all intermediate
+        // and end nodes are compliant with the W3C WebDriver Specification,
+        // and therefore will already contain all of the appropriate values
+        // for establishing a session.
+        if (capabilities is not RemoteSessionSettings remoteSettings)
+        {
+            Dictionary<string, object> matchCapabilities = this.GetCapabilitiesDictionary(capabilities);
+
+            List<object> firstMatchCapabilitiesList = new List<object>();
+            firstMatchCapabilitiesList.Add(matchCapabilities);
+
+            Dictionary<string, object> specCompliantCapabilitiesDictionary = new Dictionary<string, object>();
+            specCompliantCapabilitiesDictionary["firstMatch"] = firstMatchCapabilitiesList;
+
+            parameters.Add("capabilities", specCompliantCapabilitiesDictionary);
+        }
+        else
+        {
+            parameters.Add("capabilities", remoteSettings.ToDictionary());
+        }
+
+#pragma warning disable CS8774 // Member must have a non-null value when exiting (guaranteed by logic below)
+        Response response = await this.ExecuteAsync(DriverCommand.NewSession, parameters).ConfigureAwait(false);
+#pragma warning restore CS8774
+
+        if (response.Value is null)
+        {
+            throw new WebDriverException("The new session command returned a null value.");
+        }
+
+        if (response.Value is not Dictionary<string, object> rawCapabilities)
+        {
+            string errorMessage = string.Format(CultureInfo.InvariantCulture, "The new session command returned a value ('{0}') that is not a valid JSON object.", response.Value);
+            throw new WebDriverException(errorMessage);
+        }
+
+        this.Capabilities = new ReturnedCapabilities(rawCapabilities);
+
+        if (response.SessionId is null)
+        {
+            throw new WebDriverException($"The remote end did not respond with ID of a session when it was required. {response.Value}");
+        }
+
+        this.SessionId = new SessionId(response.SessionId);
+    }
+
+    /// <summary>
     /// Gets the capabilities as a dictionary.
     /// </summary>
     /// <param name="capabilitiesToConvert">The dictionary to return.</param>
@@ -681,6 +774,46 @@ public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFinds
             if (this.SessionId is not null)
             {
                 this.Execute(DriverCommand.Quit, null);
+            }
+        }
+        catch (NotImplementedException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (WebDriverException)
+        {
+        }
+        finally
+        {
+            this.SessionId = null!;
+        }
+
+        this.CommandExecutor.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously performs application-defined tasks associated with freeing, releasing, or resetting resources.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        await this.DisposeAsyncCore().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Asynchronously stops the client from running.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        try
+        {
+            if (this.SessionId is not null)
+            {
+                await this.ExecuteAsync(DriverCommand.Quit, null).ConfigureAwait(false);
             }
         }
         catch (NotImplementedException)

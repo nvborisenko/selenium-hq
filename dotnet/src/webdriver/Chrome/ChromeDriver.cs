@@ -20,6 +20,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Threading.Tasks;
 using OpenQA.Selenium.Chromium;
 using OpenQA.Selenium.Remote;
 
@@ -157,6 +159,88 @@ public class ChromeDriver : ChromiumDriver
         : base(service, options, commandTimeout)
     {
         this.AddCustomChromeCommands();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChromeDriver"/> class using the specified executor, skipping session initialization.
+    /// </summary>
+    /// <param name="executor">The <see cref="ICommandExecutor"/> object used to execute commands.</param>
+    /// <param name="options">The <see cref="ChromeOptions"/> to be used with the Chrome driver.</param>
+    /// <param name="skipSessionStart">Must be <see langword="true"/> to skip session initialization.</param>
+    private ChromeDriver(ICommandExecutor executor, ChromeOptions options, bool skipSessionStart)
+        : base(executor, options, skipSessionStart)
+    {
+    }
+
+    /// <summary>
+    /// Asynchronously creates and initializes a new instance of the <see cref="ChromeDriver"/> class with the specified options.
+    /// </summary>
+    /// <param name="options">The <see cref="ChromeOptions"/> to be used with the Chrome driver.</param>
+    /// <param name="commandTimeout">The maximum amount of time to wait for each command. If not specified, uses the default timeout.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the initialized <see cref="ChromeDriver"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="options"/> is <see langword="null"/>.</exception>
+    public static async Task<ChromeDriver> StartAsync(ChromeOptions options, TimeSpan commandTimeout = default)
+    {
+        if (options is null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        ChromeDriverService service = ChromeDriverService.CreateDefaultService();
+        TimeSpan timeout = commandTimeout == default ? RemoteWebDriver.DefaultCommandTimeout : commandTimeout;
+
+        ICommandExecutor executor = await GenerateDriverServiceCommandExecutorAsync(service, options, timeout).ConfigureAwait(false);
+
+        ChromeDriver driver = new ChromeDriver(executor, options, skipSessionStart: true);
+
+        try
+        {
+            await driver.StartSessionAsync(ConvertOptionsToCapabilities(options)).ConfigureAwait(false);
+            driver.CompleteInitialization();
+            driver.AddCustomChromeCommands();
+        }
+        catch (Exception)
+        {
+            try
+            {
+                await driver.DisposeAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // Ignore the clean-up exception. We'll propagate the original failure.
+            }
+            throw;
+        }
+
+        return driver;
+    }
+
+    private static async Task<ICommandExecutor> GenerateDriverServiceCommandExecutorAsync(ChromeDriverService service, ChromeOptions options, TimeSpan commandTimeout)
+    {
+        if (service is null)
+        {
+            throw new ArgumentNullException(nameof(service));
+        }
+
+        if (options is null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        if (service.DriverServicePath == null)
+        {
+            DriverFinder finder = new DriverFinder(options);
+            string fullServicePath = await finder.GetDriverPathAsync().ConfigureAwait(false);
+            service.DriverServicePath = Path.GetDirectoryName(fullServicePath);
+            service.DriverServiceExecutableName = Path.GetFileName(fullServicePath);
+            string fullBrowserPath = await finder.GetBrowserPathAsync().ConfigureAwait(false);
+            options.BinaryLocation = fullBrowserPath;
+            options.BrowserVersion = null;
+        }
+
+        await service.StartAsync().ConfigureAwait(false);
+
+        return new DriverServiceCommandExecutor(service, commandTimeout);
     }
 
     /// <summary>
