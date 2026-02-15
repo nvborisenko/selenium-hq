@@ -176,10 +176,9 @@ public class ChromeDriver : ChromiumDriver
     /// Asynchronously creates and initializes a new instance of the <see cref="ChromeDriver"/> class with the specified options.
     /// </summary>
     /// <param name="options">The <see cref="ChromeOptions"/> to be used with the Chrome driver.</param>
-    /// <param name="commandTimeout">The maximum amount of time to wait for each command. If not specified, uses the default timeout.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the initialized <see cref="ChromeDriver"/> instance.</returns>
     /// <exception cref="ArgumentNullException">If <paramref name="options"/> is <see langword="null"/>.</exception>
-    public static async Task<ChromeDriver> StartAsync(ChromeOptions options, TimeSpan commandTimeout = default)
+    public static async Task<ChromeDriver> StartAsync(ChromeOptions options)
     {
         if (options is null)
         {
@@ -187,9 +186,8 @@ public class ChromeDriver : ChromiumDriver
         }
 
         ChromeDriverService service = ChromeDriverService.CreateDefaultService();
-        TimeSpan timeout = commandTimeout == default ? RemoteWebDriver.DefaultCommandTimeout : commandTimeout;
 
-        ICommandExecutor executor = await GenerateDriverServiceCommandExecutorAsync(service, options, timeout).ConfigureAwait(false);
+        ICommandExecutor executor = await GenerateDriverServiceCommandExecutorAsync(service, options, RemoteWebDriver.DefaultCommandTimeout).ConfigureAwait(false);
 
         ChromeDriver driver = new ChromeDriver(executor, options, skipSessionStart: true);
 
