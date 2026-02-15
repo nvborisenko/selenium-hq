@@ -18,54 +18,45 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using OpenQA.Selenium.Manager;
 
 namespace OpenQA.Selenium;
 
-/// <summary>
-/// Finds a driver, checks if the provided path exists, if not, Selenium Manager is used.
-/// This implementation is still in beta and may change.
-/// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="DriverFinder"/> class.
-/// </remarks>
-/// <exception cref="ArgumentNullException">If <paramref name="options"/> is <see langword="null"/>.</exception>
 internal class DriverFinder(DriverOptions options)
 {
-    private string? _driverPath;
-    private string? _browserPath;
+    private string _driverPath = null!;
+    private string _browserPath = null!;
     private readonly DriverOptions options = options ?? throw new ArgumentNullException(nameof(options));
-
-    public async ValueTask<string> GetBrowserPathAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(_browserPath))
-        {
-            return _browserPath!;
-        }
-
-        await DiscoverBinaryPathsAsync().ConfigureAwait(false);
-
-        return _browserPath!;
-    }
 
     public async ValueTask<string> GetDriverPathAsync()
     {
-        if (!string.IsNullOrWhiteSpace(_driverPath))
+        if (_driverPath is null)
         {
-            return _driverPath!;
+            await DiscoverBinaryPathsAsync().ConfigureAwait(false);
         }
-
-        await DiscoverBinaryPathsAsync().ConfigureAwait(false);
 
         return _driverPath!;
     }
 
+    public async ValueTask<string> GetBrowserPathAsync()
+    {
+        if (_browserPath is null)
+        {
+            await DiscoverBinaryPathsAsync().ConfigureAwait(false);
+        }
+
+        return _browserPath!;
+    }
+
     private async ValueTask DiscoverBinaryPathsAsync()
     {
+        if (string.IsNullOrWhiteSpace(options.BrowserName))
+        {
+            throw new NoSuchDriverException("Browser name must be specified to find the driver.");
+        }
+
         BrowserDiscoveryResult smResult = await SeleniumManager.DiscoverBrowserAsync(options.BrowserName!, new BrowserDiscoveryOptions
         {
             BrowserVersion = options.BrowserVersion,
@@ -78,12 +69,12 @@ internal class DriverFinder(DriverOptions options)
 
         if (!File.Exists(driverPath))
         {
-            throw new FileNotFoundException("Driver not found", driverPath);
+            throw new NoSuchDriverException($"Driver not found: {driverPath}");
         }
 
         if (!File.Exists(browserPath))
         {
-            throw new FileNotFoundException("Browser not found", browserPath);
+            throw new NoSuchDriverException($"Browser not found: {browserPath}");
         }
 
         _driverPath = driverPath;

@@ -41,6 +41,9 @@ namespace OpenQA.Selenium.Manager;
 /// Manages automatic discovery and configuration of browser drivers.
 /// </summary>
 /// <remarks>
+/// <para>
+/// <b>This implementation is still in beta and may change.</b>
+/// </para>
 /// Selenium Manager automatically locates or downloads the appropriate browser driver
 /// for the specified browser. It eliminates the need for manual driver management by:
 /// <list type="bullet">
@@ -58,9 +61,9 @@ public static partial class SeleniumManager
 {
     private static readonly ILogger _logger = Log.GetLogger(typeof(SeleniumManager));
 
-    // This logic to find Selenium Manager binary is complex and strange.
-    // As soon as Selenium Manager will be real native library (dll ,so, dynlib),
-    // we will be able to use it directly from the .NET bindings, and this logic will be removed.
+    // This logic to find the Selenium Manager binary is complex due to supporting multiple deployment scenarios.
+    // Once Selenium Manager becomes a true native library (dll, so, dylib),
+    // we will be able to reference it directly from the .NET bindings, and this logic will be removed.
     private static readonly Lazy<string> _lazyBinaryFullPath = new(() =>
     {
         if (_logger.IsEnabled(LogEventLevel.Debug))
@@ -191,25 +194,25 @@ public static partial class SeleniumManager
     /// <summary>
     /// Discovers the browser and driver paths for the specified browser.
     /// </summary>
-    /// <param name="browserName">The name of the browser (e.g., "chrome", "firefox", "edge").</param>
+    /// <param name="name">The name of the browser (e.g., "chrome", "firefox", "edge").</param>
     /// <param name="options">Optional discovery options to control browser and driver resolution.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="BrowserDiscoveryResult"/> with the paths to the driver and browser executables.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="browserName"/> is null, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null, empty, or whitespace.</exception>
     /// <exception cref="WebDriverException">Thrown when Selenium Manager fails to locate or download the required binaries.</exception>
     public static async Task<BrowserDiscoveryResult> DiscoverBrowserAsync(
-        string browserName,
+        string name,
         BrowserDiscoveryOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(browserName))
+        if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Browser name must be specified to find the driver using Selenium Manager.", nameof(browserName));
+            throw new ArgumentException("Browser name must be specified to find the driver using Selenium Manager.", nameof(name));
         }
 
         StringBuilder argsBuilder = new();
 
-        argsBuilder.AppendFormat(CultureInfo.InvariantCulture, " --browser \"{0}\"", browserName);
+        argsBuilder.AppendFormat(CultureInfo.InvariantCulture, " --browser \"{0}\"", name);
 
         if (options is not null)
         {
@@ -251,8 +254,8 @@ public static partial class SeleniumManager
 
     private static async Task<TResult> RunCommandAsync<TResult>(
         string arguments,
-         JsonTypeInfo<TResult> jsonResultTypeInfo,
-          CancellationToken cancellationToken = default)
+        JsonTypeInfo<TResult> jsonResultTypeInfo,
+        CancellationToken cancellationToken = default)
     {
         string smBinaryPath = _lazyBinaryFullPath.Value;
 
@@ -274,15 +277,12 @@ public static partial class SeleniumManager
         StringBuilder stdOutputBuilder = new();
         StringBuilder errOutputBuilder = new();
 
-        process.OutputDataReceived += HandleStandardOutput;
-        process.ErrorDataReceived += HandleErrorOutput;
-
         try
         {
             process.Start();
 
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            var stdOutputTask = ReadStandardOutputAsync();
+            var errOutputTask = ReadErrorOutputAsync();
 
 #if NET8_0_OR_GREATER
             try
@@ -300,7 +300,10 @@ public static partial class SeleniumManager
                     // Process may have already exited
                 }
 
-                throw new WebDriverException("Selenium Manager process was cancelled.");
+                // Await output tasks to prevent unobserved exceptions when process is killed
+                await AwaitAndSuppressExceptionsAsync(stdOutputTask, errOutputTask).ConfigureAwait(false);
+
+                throw;
             }
 #else
             var processExitTask = Task.Run(() => process.WaitForExit(), CancellationToken.None);
@@ -320,8 +323,18 @@ public static partial class SeleniumManager
                 await processExitTask.ConfigureAwait(false);
             }
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                // Await output tasks to prevent unobserved exceptions when process is killed
+                await AwaitAndSuppressExceptionsAsync(stdOutputTask, errOutputTask).ConfigureAwait(false);
+            }
+
             cancellationToken.ThrowIfCancellationRequested();
 #endif
+
+            // Ensure output streams are fully drained before parsing.
+            // ReadLineAsync processes lines as they arrive and completes when stream ends.
+            await Task.WhenAll(stdOutputTask, errOutputTask).ConfigureAwait(false);
 
             if (process.ExitCode != 0)
             {
@@ -346,14 +359,9 @@ public static partial class SeleniumManager
                 throw new WebDriverException(exceptionMessageBuilder.ToString());
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException and not WebDriverException)
         {
             throw new WebDriverException($"Error starting process: {process.StartInfo.FileName} {arguments}", ex);
-        }
-        finally
-        {
-            process.OutputDataReceived -= HandleStandardOutput;
-            process.ErrorDataReceived -= HandleErrorOutput;
         }
 
         string output = stdOutputBuilder.ToString().Trim();
@@ -372,16 +380,32 @@ public static partial class SeleniumManager
 
         return result;
 
-        void HandleStandardOutput(object sender, DataReceivedEventArgs e)
+        // Local functions to read process output streams concurrently
+        async Task ReadStandardOutputAsync()
         {
-            stdOutputBuilder.AppendLine(e.Data);
+            string? line;
+
+#if NET8_0_OR_GREATER
+            while ((line = await process.StandardOutput.ReadLineAsync(cancellationToken).ConfigureAwait(false)) is not null)
+#else
+            while ((line = await process.StandardOutput.ReadLineAsync().ConfigureAwait(false)) is not null)
+#endif
+            {
+                stdOutputBuilder.AppendLine(line);
+            }
         }
 
-        void HandleErrorOutput(object sender, DataReceivedEventArgs e)
+        async Task ReadErrorOutputAsync()
         {
-            if (e.Data is not null)
+            string? line;
+
+#if NET8_0_OR_GREATER
+            while ((line = await process.StandardError.ReadLineAsync(cancellationToken).ConfigureAwait(false)) is not null)
+#else
+            while ((line = await process.StandardError.ReadLineAsync().ConfigureAwait(false)) is not null)
+#endif
             {
-                var match = LogMessageRegex.Match(e.Data);
+                var match = LogMessageRegex.Match(line);
 
                 if (match.Success)
                 {
@@ -418,7 +442,7 @@ public static partial class SeleniumManager
                         default:
                             if (_logger.IsEnabled(LogEventLevel.Warn))
                             {
-                                _logger.Warn($"Unknown log level '{logLevel}' in Selenium Manager log message. Original message: {e.Data}");
+                                _logger.Warn($"Unknown log level '{logLevel}' in Selenium Manager log message. Original message: {line}");
                             }
                             _logger.LogMessage(dateTime, LogEventLevel.Trace, message);
                             break;
@@ -426,13 +450,29 @@ public static partial class SeleniumManager
                 }
                 else
                 {
-                    errOutputBuilder.AppendLine(e.Data);
+                    // Collect non-structured error output for exception reporting
+                    errOutputBuilder.AppendLine(line);
                 }
+            }
+        }
+
+        static async Task AwaitAndSuppressExceptionsAsync(params Task[] tasks)
+        {
+            try
+            {
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Suppress exceptions
             }
         }
     }
 
-    // Example log message: [2026-02-10T19:33:13.886Z ERROR] You need to specify a browser or driver
+    // Regex pattern to parse structured log messages from Selenium Manager.
+    // Example: "[2026-02-10T19:33:13.886Z ERROR] You need to specify a browser or driver"
+    // Groups: (1) timestamp, (2) log level, (3) message
+    // The optional tab (\t?) handles formatting variations between log levels.
     const string LogMessageRegexPattern = @"^\[(.*) ([A-Z]+)\t?\] (.*)$";
 
 #if NET8_0_OR_GREATER
