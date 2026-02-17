@@ -830,7 +830,7 @@ public class WebDriver : IWebDriver, ISearchContext, IJavaScriptExecutor, IFinds
             this.SessionId = null!;
         }
 
-        this.CommandExecutor.Dispose();
+        await this.CommandExecutor.DisposeAsync().ConfigureAwait(false);
     }
 
     private static void UnpackAndThrowOnError(Response errorResponse, string commandToExecute)

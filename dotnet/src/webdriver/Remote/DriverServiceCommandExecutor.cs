@@ -115,7 +115,7 @@ public class DriverServiceCommandExecutor : ICommandExecutor
         Response toReturn;
         if (commandToExecute.Name == DriverCommand.NewSession)
         {
-            this.service.Start();
+            await this.service.StartAsync().ConfigureAwait(false);
         }
 
         // Use a try-catch block to catch exceptions for the Quit
@@ -128,7 +128,7 @@ public class DriverServiceCommandExecutor : ICommandExecutor
         {
             if (commandToExecute.Name == DriverCommand.Quit)
             {
-                this.Dispose();
+                await this.DisposeAsync().ConfigureAwait(false);
             }
         }
 
@@ -141,6 +141,17 @@ public class DriverServiceCommandExecutor : ICommandExecutor
     public void Dispose()
     {
         this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Asynchronously releases all resources used by the <see cref="DriverServiceCommandExecutor"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        await this.DisposeAsyncCore().ConfigureAwait(false);
+        this.Dispose(false);
         GC.SuppressFinalize(this);
     }
 
@@ -159,6 +170,21 @@ public class DriverServiceCommandExecutor : ICommandExecutor
                 this.HttpExecutor.Dispose();
                 this.service.Dispose();
             }
+
+            this.isDisposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously releases the managed resources used by the <see cref="DriverServiceCommandExecutor"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (!this.isDisposed)
+        {
+            await this.HttpExecutor.DisposeAsync().ConfigureAwait(false);
+            await this.service.DisposeAsync().ConfigureAwait(false);
 
             this.isDisposed = true;
         }

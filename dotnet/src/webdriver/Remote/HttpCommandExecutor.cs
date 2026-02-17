@@ -358,12 +358,40 @@ public class HttpCommandExecutor : ICommandExecutor
     }
 
     /// <summary>
+    /// Asynchronously releases all resources used by the <see cref="HttpCommandExecutor"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        await this.DisposeAsyncCore().ConfigureAwait(false);
+        this.Dispose(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Releases the unmanaged resources used by the <see cref="HttpCommandExecutor"/> and
     /// optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing"><see langword="true"/> to release managed and resources;
     /// <see langword="false"/> to only release unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
+    {
+        if (!this.isDisposed)
+        {
+            if (disposing && this.client.IsValueCreated)
+            {
+                this.client.Value.Dispose();
+            }
+
+            this.isDisposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously releases the managed resources used by the <see cref="HttpCommandExecutor"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    protected virtual async ValueTask DisposeAsyncCore()
     {
         if (!this.isDisposed)
         {
@@ -374,6 +402,8 @@ public class HttpCommandExecutor : ICommandExecutor
 
             this.isDisposed = true;
         }
+
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     private class HttpRequestInfo

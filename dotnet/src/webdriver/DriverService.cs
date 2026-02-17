@@ -34,7 +34,7 @@ namespace OpenQA.Selenium;
 /// <summary>
 /// Exposes the service provided by a native WebDriver server executable.
 /// </summary>
-public abstract class DriverService : ICommandServer
+public abstract class DriverService : ICommandServer, IAsyncDisposable
 {
     private bool isDisposed;
     private Process? driverServiceProcess;
@@ -226,6 +226,17 @@ public abstract class DriverService : ICommandServer
     }
 
     /// <summary>
+    /// Asynchronously releases all resources associated with this <see cref="DriverService"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        await this.DisposeAsyncCore().ConfigureAwait(false);
+        this.Dispose(false);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Starts the DriverService if it is not already running.
     /// </summary>
     [MemberNotNull(nameof(driverServiceProcess))]
@@ -380,6 +391,26 @@ public abstract class DriverService : ICommandServer
     }
 
     /// <summary>
+    /// Asynchronously releases the managed resources used by this <see cref="DriverService"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous dispose operation.</returns>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (!this.isDisposed)
+        {
+            await this.StopAsync().ConfigureAwait(false);
+
+            if (EnableProcessRedirection && this.driverServiceProcess is not null)
+            {
+                this.driverServiceProcess.OutputDataReceived -= this.OnDriverProcessDataReceived;
+                this.driverServiceProcess.ErrorDataReceived -= this.OnDriverProcessDataReceived;
+            }
+
+            this.isDisposed = true;
+        }
+    }
+
+    /// <summary>
     /// Raises the <see cref="DriverProcessStarting"/> event.
     /// </summary>
     /// <param name="eventArgs">A <see cref="DriverProcessStartingEventArgs"/> that contains the event data.</param>
@@ -473,6 +504,130 @@ public abstract class DriverService : ICommandServer
             this.driverServiceProcess.Dispose();
             this.driverServiceProcess = null;
         }
+    }
+
+    /// <summary>
+    /// Asynchronously stops the DriverService.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous stop operation.</returns>
+    private async Task StopAsync()
+    {
+        if (this.IsRunning)
+        {
+            if (this.HasShutdown)
+            {
+                Uri shutdownUrl = new Uri(this.ServiceUrl, "/shutdown");
+                using (var httpClient = new HttpClient())
+                using (var cts = new CancellationTokenSource(this.TerminationTimeout))
+                {
+                    httpClient.DefaultRequestHeaders.ConnectionClose = true;
+
+                    while (this.IsRunning && !cts.Token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            // Issue the shutdown HTTP request, then wait a short while for
+                            // the process to have exited. If the process hasn't yet exited,
+                            // we'll retry. We wait for exit here, since catching the exception
+                            // for a failed HTTP request due to a closed socket is particularly
+                            // expensive.
+                            using (var response = await httpClient.GetAsync(shutdownUrl, cts.Token).ConfigureAwait(false))
+                            {
+
+                            }
+
+                            await WaitForProcessExitAsync(this.driverServiceProcess, cts.Token).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException) when (cts.Token.IsCancellationRequested)
+                        {
+                            // Timeout occurred
+                            break;
+                        }
+                        catch (Exception ex) when (ex is HttpRequestException || ex is TimeoutException)
+                        {
+                            // Service shutdown failed, continue trying
+                        }
+
+                        try
+                        {
+                            // Add a small delay between retry attempts
+                            await Task.Delay(50, cts.Token).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Timeout occurred during delay
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If at this point, the process still hasn't exited, wait for one
+            // last-ditch time, then, if it still hasn't exited, kill it. Note
+            // that falling into this branch of code should be exceedingly rare.
+            if (this.IsRunning)
+            {
+                try
+                {
+                    using (var cts = new CancellationTokenSource(this.TerminationTimeout))
+                    {
+                        await WaitForProcessExitAsync(this.driverServiceProcess, cts.Token).ConfigureAwait(false);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Timeout occurred, force kill
+                }
+
+                if (!this.driverServiceProcess.HasExited)
+                {
+                    this.driverServiceProcess.Kill();
+                }
+            }
+
+            this.driverServiceProcess.Dispose();
+            this.driverServiceProcess = null;
+        }
+    }
+
+    /// <summary>
+    /// Waits asynchronously for the process to exit, compatible with all target frameworks.
+    /// </summary>
+    /// <param name="process">The process to wait for.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the wait operation.</param>
+    /// <returns>A task that represents the asynchronous wait operation.</returns>
+    private static async Task WaitForProcessExitAsync(Process process, CancellationToken cancellationToken)
+    {
+#if NET5_0_OR_GREATER
+        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+#else
+        var tcs = new TaskCompletionSource<bool>();
+
+        void ProcessExited(object? sender, EventArgs e)
+        {
+            tcs.TrySetResult(true);
+        }
+
+        process.EnableRaisingEvents = true;
+        process.Exited += ProcessExited;
+
+        try
+        {
+            if (process.HasExited)
+            {
+                return;
+            }
+
+            using (cancellationToken.Register(() => tcs.TrySetCanceled()))
+            {
+                await tcs.Task.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            process.Exited -= ProcessExited;
+        }
+#endif
     }
 
     /// <summary>

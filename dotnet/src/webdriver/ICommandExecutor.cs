@@ -26,7 +26,7 @@ namespace OpenQA.Selenium;
 /// <summary>
 /// Provides a way to send commands to the remote server
 /// </summary>
-public interface ICommandExecutor : IDisposable
+public interface ICommandExecutor : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// Attempts to add a command to the repository of commands known to this executor.
