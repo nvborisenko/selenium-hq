@@ -23,23 +23,17 @@ internal class CdpTests : BiDiTestFixture
 
         var session = await cdp.GetSessionAsync(context);
 
-        await cdp.OnEventAsync(e => Console.WriteLine($"Received CDP event: {e}"));
-
-        // await cdp.SendCommandAsync("Network.enable", [], new() { Session = session.Session });
+        await using var _ = await cdp.OnEventAsync(e => Console.WriteLine($"Received CDP event: {e}"));
 
         await cdp.SendCommandAsync("Page.navigate", new()
         {
             ["url"] = "https://www.example.com"
         }, new() { Session = session.Session });
 
-        await Task.Delay(2000);
-
         await cdp.SendCommandAsync("Page.reload", new()
         {
             ["ignoreCache"] = true
         }, new() { Session = session.Session });
-
-        await Task.Delay(2000);
 
         Console.WriteLine(await cdp.SendCommandAsync("Browser.getVersion", [], new() { Session = session.Session }));
     }

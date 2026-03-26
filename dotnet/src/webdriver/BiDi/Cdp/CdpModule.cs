@@ -25,7 +25,8 @@ public class CdpModule : Module
 
     public async Task<Subscription> OnEventAsync(Action<CdpEventArgs> handler, SubscriptionOptions? options = null, CancellationToken cancellationToken = default)
     {
-        return await SubscribeAsync("goog:cdp", handler, options, _jsonContext.CdpEventArgs, cancellationToken).ConfigureAwait(false);
+        // or 'goog:cdp' to enable all events
+        return await SubscribeAsync("goog:cdp.Page.lifecycleEvent", handler, options, _jsonContext.CdpEventArgs, cancellationToken).ConfigureAwait(false);
     }
 
     protected override void Initialize(IBiDi bidi, JsonSerializerOptions jsonSerializerOptions)
