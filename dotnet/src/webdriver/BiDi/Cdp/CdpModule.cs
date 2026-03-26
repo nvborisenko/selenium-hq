@@ -23,6 +23,11 @@ public class CdpModule : Module
         return ExecuteCommandAsync(new SendCommandCommand(@params, null), options, _jsonContext.SendCommandCommand, _jsonContext.SendCommandResult, cancellationToken);
     }
 
+    public async Task<Subscription> OnEventAsync(Action<CdpEventArgs> handler, SubscriptionOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        return await SubscribeAsync("goog:cdp", handler, options, _jsonContext.CdpEventArgs, cancellationToken).ConfigureAwait(false);
+    }
+
     protected override void Initialize(IBiDi bidi, JsonSerializerOptions jsonSerializerOptions)
     {
         jsonSerializerOptions.Converters.Add(new BrowsingContextConverter(bidi));
@@ -35,4 +40,7 @@ public class CdpModule : Module
 [JsonSerializable(typeof(GetSessionResult))]
 [JsonSerializable(typeof(SendCommandCommand))]
 [JsonSerializable(typeof(SendCommandResult))]
+
+[JsonSerializable(typeof(CdpEventArgs))]
+
 internal partial class CdpJsonSerializerContext : JsonSerializerContext;

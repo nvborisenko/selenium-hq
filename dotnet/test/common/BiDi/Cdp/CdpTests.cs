@@ -23,7 +23,9 @@ internal class CdpTests : BiDiTestFixture
 
         var session = await cdp.GetSessionAsync(context);
 
-        await cdp.SendCommandAsync("Network.enable", [], new() { Session = session.Session });
+        await cdp.OnEventAsync(e => Console.WriteLine($"Received CDP event: {e}"));
+
+        // await cdp.SendCommandAsync("Network.enable", [], new() { Session = session.Session });
 
         await cdp.SendCommandAsync("Page.navigate", new()
         {
