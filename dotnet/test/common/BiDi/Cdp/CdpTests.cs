@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -22,19 +22,23 @@ internal class CdpTests : BiDiTestFixture
         var cdp = bidi.AsModule<CdpModule>();
 
         var session = await cdp.GetSessionAsync(context);
-        
-        await cdp.SendCommandAsync("Page.navigate", new ()
+
+        await cdp.SendCommandAsync("Network.enable", [], new() { Session = session.Session });
+
+        await cdp.SendCommandAsync("Page.navigate", new()
         {
             ["url"] = "https://www.example.com"
-        }, new SendCommandOptions { Session = session.Session });
+        }, new() { Session = session.Session });
 
         await Task.Delay(2000);
 
-        await cdp.SendCommandAsync("Page.reload", new ()
+        await cdp.SendCommandAsync("Page.reload", new()
         {
             ["ignoreCache"] = true
-        }, new SendCommandOptions { Session = session.Session });
-        
+        }, new() { Session = session.Session });
+
         await Task.Delay(2000);
+
+        Console.WriteLine(await cdp.SendCommandAsync("Browser.getVersion", [], new() { Session = session.Session }));
     }
 }
